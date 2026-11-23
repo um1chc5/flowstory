@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 464" width="1200" height="464" role="img" aria-labelledby="t d">
+<title id="t">One core, five optional layers</title>
+<desc id="d">Stack diagram. Core is always on. Above it are optional layers: Views, Playback, Callouts, Review and Sync, each switched on by adding its data to the spec.</desc>
+<style>
+.card{fill:#ffffff;stroke:#e3e8ef}
+.h{font:700 20px ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif;fill:#18212f} .hs{font:500 14px ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif;fill:#6b778a}
+.row{fill:#f4f6fa;stroke:#e3e8ef}
+.n{font:700 16px ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif;fill:#18212f} .d{font:500 14px ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif;fill:#4b5668} .on{font:500 12.5px ui-monospace, SFMono-Regular, Menlo, monospace;fill:#8a96a8}
+.core{fill:#18212f}
+.cn{font:800 17px ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif;fill:#ffffff} .cd{font:500 14px ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif;fill:#c9d2df} .con{font:600 12.5px ui-monospace, SFMono-Regular, Menlo, monospace;fill:#3ccf8e}
+</style>
+<rect class="card" x="1" y="1" width="1198" height="462" rx="16"/>
+<text class="h" x="40" y="44">One core, five optional layers</text>
+<text class="hs" x="1160" y="44" text-anchor="end">Each layer turns on when its data is in the spec</text>
+<g transform="translate(40 70)"><rect class="row" width="1120" height="48" rx="10"/><text class="n" x="22" y="30">Sync</text><text class="d" x="180" y="30">Code evidence pinned to a commit; check fails on drift</text><text class="on" x="1098" y="30" text-anchor="end">on with: source: code</text></g>
+<g transform="translate(40 128)"><rect class="row" width="1120" height="48" rx="10"/><text class="n" x="22" y="30">Review</text><text class="d" x="180" y="30">Problems, fixes, verdicts, PROPOSAL.md</text><text class="on" x="1098" y="30" text-anchor="end">on with: verdicts / proposal.json</text></g>
+<g transform="translate(40 186)"><rect class="row" width="1120" height="48" rx="10"/><text class="n" x="22" y="30">Callouts</text><text class="d" x="180" y="30">Notes, risks, questions pinned to nodes</text><text class="on" x="1098" y="30" text-anchor="end">on with: notes / problems</text></g>
+<g transform="translate(40 244)"><rect class="row" width="1120" height="48" rx="10"/><text class="n" x="22" y="30">Playback</text><text class="d" x="180" y="30">Scenarios move packets along edges, step by step</text><text class="on" x="1098" y="30" text-anchor="end">on with: scenarios</text></g>
+<g transform="translate(40 302)"><rect class="row" width="1120" height="48" rx="10"/><text class="n" x="22" y="30">Views</text><text class="d" x="180" y="30">One layout, several versions shown as a diff</text><text class="on" x="1098" y="30" text-anchor="end">on with: views</text></g>
+<g transform="translate(40 366)"><rect class="core" width="1120" height="58" rx="10"/><text class="cn" x="22" y="36">Core</text><text class="cd" x="180" y="36">Nodes, edges, groups · computed layout · deep dives · one HTML file</text><text class="con" x="1098" y="36" text-anchor="end">always on</text></g>
+</svg>

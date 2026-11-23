@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400" role="img" aria-labelledby="t d">
+  <title id="t">flowstory</title>
+  <desc id="d">A request moving through a small system diagram. A new outbox node is outlined in green and the old direct edge is faded, showing two versions of the same layout as a diff.</desc>
+  <style>
+    .bg { fill: #0f1623; }
+    .grid { fill: #1b2536; }
+    .word { font: 800 68px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fill: #f3f6fb; letter-spacing: -1.5px; }
+    .tag { font: 500 21px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fill: #aab6c8; }
+    .chip rect { fill: #182235; stroke: #2a3850; }
+    .chip text { font: 600 13px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fill: #c7d2e3; }
+    .lane { fill: #141d2c; stroke: #222e43; }
+    .lane-t { font: 700 11px ui-sans-serif, system-ui, sans-serif; fill: #6f7d93; letter-spacing: 1.2px; }
+    .node rect { fill: #f7f9fc; }
+    .node text { font: 600 14px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fill: #18212f; }
+    .edge { fill: none; stroke: #7d8aa0; stroke-width: 1.8; }
+    .ghost { fill: none; stroke: #7d8aa0; stroke-width: 1.8; stroke-dasharray: 5 5; opacity: .35; }
+    .new { fill: none; stroke: #3ccf8e; stroke-width: 2; }
+    .newbox { fill: none; stroke: #3ccf8e; stroke-width: 2; stroke-dasharray: 6 4; }
+    .newchip rect { fill: #3ccf8e; }
+    .newchip text { font: 800 10px ui-sans-serif, system-ui, sans-serif; fill: #0f1623; letter-spacing: .8px; }
+    .elabel { font: 500 11px ui-sans-serif, system-ui, sans-serif; fill: #9aa7ba; }
+    .packet { fill: #ffcf5a; } .halo { fill: #ffcf5a; opacity: .25; }
+    .still { display: none; }
+    @media (prefers-reduced-motion: reduce) { .moving { display: none; } .still { display: inline; } }
+  </style>
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r="1.2" class="grid"/></pattern>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1.5 9 5 1 8.5z" fill="#7d8aa0"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1.5 9 5 1 8.5z" fill="#3ccf8e"/></marker>
+  </defs>
+
+  <rect class="bg" width="1280" height="400" rx="20"/>
+  <rect width="1280" height="400" rx="20" fill="url(#dots)"/>
+
+  <!-- wordmark -->
+  <text class="word" x="64" y="150">flowstory</text>
+  <text class="tag" x="66" y="196">Interactive diagrams of software systems.</text>
+  <text class="tag" x="66" y="226">Compare versions. Play a request through.</text>
+  <text class="tag" x="66" y="256">From your codebase or a fresh design.</text>
+
+  <g class="chip" transform="translate(66 296)"><rect width="66" height="28" rx="14"/><text x="33" y="19" text-anchor="middle">views</text></g>
+  <g class="chip" transform="translate(140 296)"><rect width="84" height="28" rx="14"/><text x="42" y="19" text-anchor="middle">playback</text></g>
+  <g class="chip" transform="translate(232 296)"><rect width="80" height="28" rx="14"/><text x="40" y="19" text-anchor="middle">callouts</text></g>
+  <g class="chip" transform="translate(320 296)"><rect width="70" height="28" rx="14"/><text x="35" y="19" text-anchor="middle">review</text></g>
+  <g class="chip" transform="translate(398 296)"><rect width="58" height="28" rx="14"/><text x="29" y="19" text-anchor="middle">sync</text></g>
+
+  <!-- lanes -->
+  <rect class="lane" x="640" y="62" width="190" height="270" rx="12"/>
+  <rect class="lane" x="840" y="62" width="190" height="270" rx="12"/>
+  <rect class="lane" x="1040" y="62" width="190" height="270" rx="12"/>
+  <text class="lane-t" x="735" y="88" text-anchor="middle">CLIENT</text>
+  <text class="lane-t" x="935" y="88" text-anchor="middle">APP</text>
+  <text class="lane-t" x="1135" y="88" text-anchor="middle">DATA · ASYNC</text>
+
+  <!-- edges -->
+  <path class="edge" d="M810 134H858" marker-end="url(#a)"/>
+  <path class="edge" d="M1010 134H1058" marker-end="url(#a)"/>
+  <path class="ghost" d="M965 158V248"/>
+  <path class="new" d="M905 158V204H735V248" marker-end="url(#g)"/>
+  <path class="new" d="M810 274H858" marker-end="url(#g)"/>
+  <path class="edge" d="M1010 274H1058" marker-end="url(#a)"/>
+  <text class="elabel" x="1034" y="124" text-anchor="middle">insert</text>
+  <text class="elabel" x="975" y="212" opacity=".45">publish</text>
+  <text class="elabel" x="820" y="196" text-anchor="middle">same tx</text>
+
+  <!-- packet (under nodes so it passes behind them) -->
+  <g class="moving">
+    <g opacity="0">
+      <circle class="halo" r="11"/><circle class="packet" r="6"/>
+      <animateMotion dur="6s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.8;1" calcMode="linear" path="M810 134 L905 134 L905 204 L735 204 L735 274 L1135 274"/>
+      <animate attributeName="opacity" dur="6s" repeatCount="indefinite" values="0;1;1;0;0" keyTimes="0;0.06;0.8;0.88;1"/>
+    </g>
+  </g>
+  <g class="still"><circle class="halo" cx="868" cy="204" r="11"/><circle class="packet" cx="868" cy="204" r="6"/></g>
+
+  <!-- nodes -->
+  <g class="node"><rect x="660" y="110" width="150" height="48" rx="10"/><rect x="668" y="122" width="4" height="24" rx="2" style="fill:#4f8cff"/><text x="735" y="139" text-anchor="middle">Web client</text></g>
+  <g class="node"><rect x="860" y="110" width="150" height="48" rx="10"/><rect x="868" y="122" width="4" height="24" rx="2" style="fill:#9b6bff"/><text x="935" y="139" text-anchor="middle">Orders API</text></g>
+  <g class="node"><rect x="1060" y="110" width="150" height="48" rx="10"/><rect x="1068" y="122" width="4" height="24" rx="2" style="fill:#ff6b6b"/><text x="1135" y="139" text-anchor="middle">orders DB</text></g>
+  <g class="node"><rect x="660" y="250" width="150" height="48" rx="10"/><text x="735" y="279" text-anchor="middle">outbox</text></g>
+  <rect class="newbox" x="655" y="245" width="160" height="58" rx="13"/>
+  <g class="newchip" transform="translate(774 236)"><rect width="38" height="18" rx="9"/><text x="19" y="13" text-anchor="middle">NEW</text></g>
+  <g class="node"><rect x="860" y="250" width="150" height="48" rx="10"/><rect x="868" y="262" width="4" height="24" rx="2" style="fill:#f2b33d"/><text x="935" y="279" text-anchor="middle">order-events</text></g>
+  <g class="node"><rect x="1060" y="250" width="150" height="48" rx="10"/><rect x="1068" y="262" width="4" height="24" rx="2" style="fill:#3fb37f"/><text x="1135" y="279" text-anchor="middle">Fulfilment</text></g>
+</svg>

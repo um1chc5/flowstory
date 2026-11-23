@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/banner.svg" alt="flowstory: a request moving through a small system diagram, with a new outbox node outlined in green" width="100%">
+</p>
+
 # flowstory
 
 > **Status: design phase.** Only docs exist so far. Nothing is published. `flowstory` is a working name.
@@ -12,6 +16,10 @@ The agent reads the code, writes a small JSON spec, validates it, and builds **o
 
 Then add layers only when you need them:
 
+<p align="center">
+  <img src="docs/assets/layers.svg" alt="One core, always on, with five optional layers above it: Views, Playback, Callouts, Review, Sync" width="100%">
+</p>
+
 | Layer | Ask for it with | You get |
 | --- | --- | --- |
 | **Views** | *"…and show it with the outbox added."* | The same layout in several versions. New parts are green, removed parts fade, nothing moves. |
@@ -19,6 +27,14 @@ Then add layers only when you need them:
 | **Callouts** | *"…note where retries happen."* | Notes, risks, and questions pinned to nodes. |
 | **Review** | *"…where does it break, and how would an outbox + idempotency keys fix it?"* | Problems and fixes, a verdict for each scenario in each view, a recommendation, and a `PROPOSAL.md` with matching ids. |
 | **Sync** | *(automatic for code-traced diagrams)* | `check` fails when the code drifts away from the diagram. |
+
+The key idea is **views on one fixed layout**. Nodes never move between views, so a change reads as a diff:
+
+<p align="center">
+  <img src="docs/assets/views-diff.svg" alt="The checkout diagram in two views. Today, then a proposal that adds an outbox and an outbox relay in green and fades the old direct publish edge. Every other node stays in place." width="100%">
+</p>
+
+<sub>Illustrations of the design. Screenshots of real output will replace them as milestones land.</sub>
 
 ## Why another diagram skill?
 

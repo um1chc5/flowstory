@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 360" width="1280" height="360" role="img" aria-labelledby="t d">
+<title id="t">Views as a diff</title>
+<desc id="d">The same checkout diagram in two views. Today: client, API, database, queue and worker. Proposal: the same nodes in the same places, plus a new outbox and outbox relay outlined in green, and the old direct publish edge faded.</desc>
+<style>
+.card{fill:#ffffff;stroke:#e3e8ef}
+.pt{font:700 17px ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif;fill:#18212f}
+.lane{fill:#f4f6fa;stroke:#e6eaf1}
+.lt{font:700 10px ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif;fill:#8a96a8;letter-spacing:1px}
+.node rect{fill:#ffffff;stroke:#d5dce6}
+.node text{font:600 12.5px ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif;fill:#18212f}
+.edge{fill:none;stroke:#7d8aa0;stroke-width:1.6}
+.ghost{fill:none;stroke:#7d8aa0;stroke-width:1.6;stroke-dasharray:4 4;opacity:.35}
+.new{fill:none;stroke:#1fa971;stroke-width:1.9}
+.newbox{fill:none;stroke:#1fa971;stroke-width:1.8;stroke-dasharray:5 3}
+.el{font:500 10.5px ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif;fill:#6b778a}
+.new-t{fill:#1a8f60} .ghost-t{opacity:.4}
+.cap{font:500 15px ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif;fill:#4b5668}
+.key text{font:600 12px ui-sans-serif, system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, sans-serif;fill:#4b5668}
+</style>
+<defs>
+<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1.5 9 5 1 8.5z" fill="#7d8aa0"/></marker>
+<marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1.5 9 5 1 8.5z" fill="#1fa971"/></marker>
+</defs>
+<rect class="card" x="1" y="1" width="1278" height="358" rx="16"/>
+<g transform="translate(30 58)">
+<text x="10" y="-14" class="pt">Today</text>
+<rect class="lane" x="10" y="0" width="140" height="232" rx="10"/><text class="lt" x="80" y="20" text-anchor="middle">CLIENT</text>
+<rect class="lane" x="155" y="0" width="140" height="232" rx="10"/><text class="lt" x="225" y="20" text-anchor="middle">APP</text>
+<rect class="lane" x="300" y="0" width="140" height="232" rx="10"/><text class="lt" x="370" y="20" text-anchor="middle">ASYNC</text>
+<rect class="lane" x="445" y="0" width="140" height="232" rx="10"/><text class="lt" x="515" y="20" text-anchor="middle">DATA</text>
+<path class="edge" d="M120 69H163" marker-end="url(#a)"/>
+<path class="edge" d="M285 64H453" marker-end="url(#a)"/>
+<text class="el" x="370" y="58">insert</text>
+<path class="edge" d="M255 88V134H308" marker-end="url(#a)"/>
+<text class="el" x="261" y="112">publish</text>
+<path class="edge" d="M330 153V166H225V178" marker-end="url(#a)"/>
+<g class="node"><rect x="20" y="50" width="120" height="38" rx="8"/><rect x="27" y="60" width="3.5" height="18" rx="1.75" style="fill:#4f8cff"/><text x="84" y="74" text-anchor="middle">Web client</text></g>
+<g class="node"><rect x="165" y="50" width="120" height="38" rx="8"/><rect x="172" y="60" width="3.5" height="18" rx="1.75" style="fill:#9b6bff"/><text x="229" y="74" text-anchor="middle">Orders API</text></g>
+<g class="node"><rect x="455" y="50" width="120" height="38" rx="8"/><rect x="462" y="60" width="3.5" height="18" rx="1.75" style="fill:#ff6b6b"/><text x="519" y="74" text-anchor="middle">orders DB</text></g>
+<g class="node"><rect x="310" y="115" width="120" height="38" rx="8"/><rect x="317" y="125" width="3.5" height="18" rx="1.75" style="fill:#f2b33d"/><text x="374" y="139" text-anchor="middle">order-events</text></g>
+<g class="node"><rect x="165" y="180" width="120" height="38" rx="8"/><rect x="172" y="190" width="3.5" height="18" rx="1.75" style="fill:#3fb37f"/><text x="229" y="204" text-anchor="middle">Fulfilment</text></g>
+</g>
+<path d="M636 150 l14 14 -14 14" fill="none" stroke="#b5bfcd" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<g transform="translate(660 58)">
+<text x="10" y="-14" class="pt">Proposal · outbox</text>
+<rect class="lane" x="10" y="0" width="140" height="232" rx="10"/><text class="lt" x="80" y="20" text-anchor="middle">CLIENT</text>
+<rect class="lane" x="155" y="0" width="140" height="232" rx="10"/><text class="lt" x="225" y="20" text-anchor="middle">APP</text>
+<rect class="lane" x="300" y="0" width="140" height="232" rx="10"/><text class="lt" x="370" y="20" text-anchor="middle">ASYNC</text>
+<rect class="lane" x="445" y="0" width="140" height="232" rx="10"/><text class="lt" x="515" y="20" text-anchor="middle">DATA</text>
+<path class="edge" d="M120 69H163" marker-end="url(#a)"/>
+<path class="edge" d="M285 64H453" marker-end="url(#a)"/>
+<text class="el" x="370" y="58">insert</text>
+<path class="ghost" d="M255 88V134H308"/>
+<text class="el ghost-t" x="261" y="112">publish</text>
+<path class="edge" d="M330 153V166H225V178" marker-end="url(#a)"/>
+<path class="new" d="M285 78H295V101H515V178" marker-end="url(#g)"/>
+<text class="el new-t" x="405" y="96">same tx</text>
+<path class="new" d="M455 199H432" marker-end="url(#g)"/>
+<path class="new" d="M390 180V155" marker-end="url(#g)"/>
+<text class="el new-t" x="396" y="172">publish</text>
+<g class="node"><rect x="20" y="50" width="120" height="38" rx="8"/><rect x="27" y="60" width="3.5" height="18" rx="1.75" style="fill:#4f8cff"/><text x="84" y="74" text-anchor="middle">Web client</text></g>
+<g class="node"><rect x="165" y="50" width="120" height="38" rx="8"/><rect x="172" y="60" width="3.5" height="18" rx="1.75" style="fill:#9b6bff"/><text x="229" y="74" text-anchor="middle">Orders API</text></g>
+<g class="node"><rect x="455" y="50" width="120" height="38" rx="8"/><rect x="462" y="60" width="3.5" height="18" rx="1.75" style="fill:#ff6b6b"/><text x="519" y="74" text-anchor="middle">orders DB</text></g>
+<g class="node"><rect x="310" y="115" width="120" height="38" rx="8"/><rect x="317" y="125" width="3.5" height="18" rx="1.75" style="fill:#f2b33d"/><text x="374" y="139" text-anchor="middle">order-events</text></g>
+<g class="node"><rect x="165" y="180" width="120" height="38" rx="8"/><rect x="172" y="190" width="3.5" height="18" rx="1.75" style="fill:#3fb37f"/><text x="229" y="204" text-anchor="middle">Fulfilment</text></g>
+<g class="node"><rect x="310" y="180" width="120" height="38" rx="8"/><rect x="317" y="190" width="3.5" height="18" rx="1.75" style="fill:#3fb37f"/><text x="374" y="204" text-anchor="middle">Outbox relay</text></g>
+<rect class="newbox" x="306" y="176" width="128" height="46" rx="11"/>
+<g class="node"><rect x="455" y="180" width="120" height="38" rx="8"/><rect x="462" y="190" width="3.5" height="18" rx="1.75" style="fill:#ff6b6b"/><text x="519" y="204" text-anchor="middle">outbox</text></g>
+<rect class="newbox" x="451" y="176" width="128" height="46" rx="11"/>
+</g>
+<text class="cap" x="40" y="328">Same layout in every view: nothing moves, so the change reads as a diff.</text>
+<g class="key" transform="translate(840 316)">
+<rect x="0" y="0" width="22" height="16" rx="4" fill="none" stroke="#1fa971" stroke-width="1.8" stroke-dasharray="5 3"/><text x="30" y="12.5">new</text>
+<path d="M90 8h26" stroke="#7d8aa0" stroke-width="1.6" stroke-dasharray="4 4" opacity=".4"/><text x="124" y="12.5">removed</text>
+<path d="M210 8h26" stroke="#7d8aa0" stroke-width="1.6"/><text x="244" y="12.5">unchanged</text>
+</g>
+</svg>
