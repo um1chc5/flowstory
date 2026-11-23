@@ -368,6 +368,8 @@ Every error has a stable `code`, a JSON Pointer `path`, and, where possible, a c
 | `verdict-missing` | With Review on, every (scenario, shown view) has a verdict |
 | `fix-orphan` | Every fix solves at least one problem and appears in at least one view |
 | `problem-unused` | With Playback on, every problem is cited by at least one step (warning) |
+| `cell-conflict` | No two nodes share a lane and row (unless placed by hand with `x`/`y`) |
+| `type-unsupported` | `type` is one the current version can lay out (v1: `flow`, then `sequence`) |
 | `layer-missing` | Fields of a layer refer to another layer that isn't there (e.g. `byView` with no `views`, step `callouts` with no notes or problems) |
 | `evidence-kind` | `code` evidence only when `source` is `"code"` |
 | `rules-conflict` | No element is both excluded and `newIn` in the same view |

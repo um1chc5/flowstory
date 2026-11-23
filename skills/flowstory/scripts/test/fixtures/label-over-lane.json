@@ -1,0 +1,90 @@
+{
+  "expect": "clean",
+  "spec": {
+    "flowstory": 1,
+    "id": "label-over-lane",
+    "title": "Edge skips a lane",
+    "type": "flow",
+    "source": "design",
+    "lanes": [
+      {
+        "id": "edge",
+        "label": "Client"
+      },
+      {
+        "id": "app",
+        "label": "App"
+      },
+      {
+        "id": "async",
+        "label": "Async"
+      },
+      {
+        "id": "data",
+        "label": "Data"
+      }
+    ],
+    "nodes": [
+      {
+        "id": "client",
+        "kind": "client",
+        "lane": "edge",
+        "row": 0,
+        "label": "Web client"
+      },
+      {
+        "id": "api",
+        "kind": "service",
+        "lane": "app",
+        "row": 0,
+        "label": "Orders API"
+      },
+      {
+        "id": "queue",
+        "kind": "queue",
+        "lane": "async",
+        "row": 0,
+        "label": "order-events"
+      },
+      {
+        "id": "worker",
+        "kind": "worker",
+        "lane": "async",
+        "row": 1,
+        "label": "Fulfilment worker"
+      },
+      {
+        "id": "db",
+        "kind": "store",
+        "lane": "data",
+        "row": 0,
+        "label": "orders DB"
+      }
+    ],
+    "edges": [
+      {
+        "id": "client>api",
+        "from": "client",
+        "to": "api",
+        "label": "POST /orders"
+      },
+      {
+        "id": "api>db",
+        "from": "api",
+        "to": "db",
+        "label": "insert order row"
+      },
+      {
+        "id": "api>queue",
+        "from": "api",
+        "to": "queue",
+        "label": "OrderCreated"
+      },
+      {
+        "id": "queue>worker",
+        "from": "queue",
+        "to": "worker"
+      }
+    ]
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "flowstory Core Spec (M0)",
+  "type": "object",
+  "required": ["flowstory", "id", "title", "type", "source", "lanes", "nodes", "edges"],
+  "properties": {
+    "flowstory": {
+      "type": "integer",
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "type": {
+      "type": "string",
+      "enum": ["flow", "sequence", "state", "pipeline", "deployment"]
+    },
+    "source": {
+      "type": "string",
+      "enum": ["code", "design"]
+    },
+    "preset": {
+      "type": "string",
+      "enum": ["diagram", "compare", "walkthrough", "review", "full", "embed"]
+    },
+    "features": {
+      "type": "object"
+    },
+    "lanes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string" }
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "lane", "row"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "kind": { "type": "string", "minLength": 1 },
+          "lane": { "type": "string", "minLength": 1 },
+          "row": { "type": "number", "minimum": 0 },
+          "span": { "type": "number", "exclusiveMinimum": 0 },
+          "label": { "type": "string" },
+          "sub": { "type": "string" },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "deep": { "type": "string" },
+          "deepIn": { "type": "object" },
+          "alt": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "sub": { "type": "string" }
+            }
+          },
+          "only": { "type": "array", "items": { "type": "string" } },
+          "hideIn": { "type": "array", "items": { "type": "string" } },
+          "newIn": { "type": "array", "items": { "type": "string" } },
+          "ghostIn": { "type": "array", "items": { "type": "string" } },
+          "altIn": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "from", "to"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "from": { "type": "string", "minLength": 1 },
+          "to": { "type": "string", "minLength": 1 },
+          "label": { "type": "string" },
+          "pts": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": { "type": "number" }
+            }
+          },
+          "labelAt": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": { "type": "number" }
+          },
+          "only": { "type": "array", "items": { "type": "string" } },
+          "hideIn": { "type": "array", "items": { "type": "string" } },
+          "newIn": { "type": "array", "items": { "type": "string" } },
+          "ghostIn": { "type": "array", "items": { "type": "string" } },
+          "altIn": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string" },
+          "style": { "type": "string" },
+          "nodes": { "type": "array", "items": { "type": "string" } },
+          "groups": { "type": "array", "items": { "type": "string" } },
+          "only": { "type": "array", "items": { "type": "string" } },
+          "hideIn": { "type": "array", "items": { "type": "string" } },
+          "newIn": { "type": "array", "items": { "type": "string" } },
+          "ghostIn": { "type": "array", "items": { "type": "string" } },
+          "altIn": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "kinds": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string" },
+          "icon": { "type": "string" },
+          "like": { "type": "string" },
+          "color": { "type": "string" }
+        }
+      }
+    },
+    "deep": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "views": { "type": "array" },
+    "scenarios": { "type": "array" },
+    "notes": { "type": "array" },
+    "problems": { "type": "array" },
+    "fixes": { "type": "array" },
+    "evidence": { "type": "object" }
+  }
+}

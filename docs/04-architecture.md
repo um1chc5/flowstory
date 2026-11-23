@@ -127,8 +127,9 @@ v1 ships flow and sequence. State machine, pipeline/DAG, and deployment follow (
 1. Lanes become columns in declared order; widths come from their widest node label.
 2. Rows become y positions per lane. Spacing is uniform across lanes, so row 1 lines up everywhere.
 3. Edges are routed **orthogonally** on a sparse grid of channels between nodes (A* with penalties for bends, crossings, and length). Edges that share an endpoint side get spread apart along that side.
-4. Labels: candidate positions along each route (centre of the longest segment first, then others), scored for overlap with nodes, other labels, and other edges. Pick greedily, highest-degree edges first.
-5. Manual `x`/`y` and `pts` are fixed obstacles that routing goes around.
+4. Lane gaps widen to fit the labels of edges between neighbouring lanes. Lane and group titles are obstacles for routing and labels.
+5. Labels: candidate positions along each route (centre of the longest segment first, then others), scored for overlap with nodes, other labels, and other edges. Pick greedily, highest-degree edges first.
+6. Manual `x`/`y` and `pts` are fixed obstacles that routing goes around.
 
 **Sequence layout**
 
@@ -144,7 +145,9 @@ Because layout runs over the union of all views, **nothing moves when the view c
 | --- | --- |
 | `node-overlap` | No two node boxes overlap (with a minimum gap) |
 | `edge-through-node` | No edge segment crosses a node box other than its own endpoints |
-| `label-overlap` | No label overlaps a node or another label visible in the same view |
+| `label-overlap` | No label overlaps a node, a lane or group title, or another label visible in the same view |
+| `label-detached` | Every label touches its own edge (within 6 px), unless placed by hand with `labelAt` |
+| `edge-through-header` | No edge crosses a lane or group title |
 | `label-off-canvas` | Every label is inside the canvas |
 | `edge-detached` | Every edge starts and ends on its nodes' borders |
 | `view-stable` | Each node's box is identical in every view where it's visible |

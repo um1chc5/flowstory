@@ -1,0 +1,23 @@
+{
+  "expect": "clean",
+  "spec": {
+    "flowstory": 1,
+    "id": "parallel-edges",
+    "title": "Parallel edges between two nodes",
+    "type": "flow",
+    "source": "design",
+    "lanes": [
+      { "id": "app", "label": "App" },
+      { "id": "data", "label": "Data" }
+    ],
+    "nodes": [
+      { "id": "a", "kind": "service", "lane": "app", "row": 0, "label": "Service A" },
+      { "id": "b", "kind": "store", "lane": "data", "row": 0, "label": "Store B" }
+    ],
+    "edges": [
+      { "id": "a>b", "from": "a", "to": "b", "label": "write order" },
+      { "id": "a>b#2", "from": "a", "to": "b", "label": "read status" },
+      { "id": "a>b#3", "from": "a", "to": "b", "label": "audit log" }
+    ]
+  }
+}

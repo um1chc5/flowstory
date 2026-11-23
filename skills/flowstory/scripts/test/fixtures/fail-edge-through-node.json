@@ -1,0 +1,23 @@
+{
+  "expect": "edge-through-node",
+  "spec": {
+    "flowstory": 1,
+    "id": "edge-through-node",
+    "title": "Manual pts crossing a node",
+    "type": "flow",
+    "source": "design",
+    "lanes": [
+      { "id": "l1", "label": "L1" },
+      { "id": "l2", "label": "L2" },
+      { "id": "l3", "label": "L3" }
+    ],
+    "nodes": [
+      { "id": "a", "kind": "client", "lane": "l1", "row": 0, "label": "A", "x": 120, "y": 100 },
+      { "id": "mid", "kind": "service", "lane": "l2", "row": 0, "label": "Mid", "x": 360, "y": 100 },
+      { "id": "b", "kind": "store", "lane": "l3", "row": 0, "label": "B", "x": 600, "y": 100 }
+    ],
+    "edges": [
+      { "id": "a>b", "from": "a", "to": "b", "pts": [[196, 100], [524, 100]] }
+    ]
+  }
+}
