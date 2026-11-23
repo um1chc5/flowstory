@@ -33,8 +33,9 @@
   --kind-user: #4f46e5;
 }
 
+/* Dark theme: follows the OS unless features.theme forces light or dark. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0b1120;
     --bg-dot: #1e293b;
     --surface: #111827;
@@ -61,6 +62,34 @@
     --kind-function: #2dd4bf;
     --kind-user: #818cf8;
   }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b1120;
+  --bg-dot: #1e293b;
+  --surface: #111827;
+  --surface-2: #1e293b;
+  --border: #334155;
+  --border-subtle: #1e293b;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --edge: #94a3b8;
+  --edge-hi: #60a5fa;
+  --lane-bg: rgba(30, 41, 59, 0.55);
+  --group-bg: rgba(96, 165, 250, 0.06);
+  --group-border: #3b82f6;
+  --shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --focus-ring: #60a5fa;
+
+  --kind-client: #38bdf8;
+  --kind-service: #60a5fa;
+  --kind-external: #a78bfa;
+  --kind-queue: #fbbf24;
+  --kind-worker: #34d399;
+  --kind-store: #f87171;
+  --kind-cache: #fb923c;
+  --kind-function: #2dd4bf;
+  --kind-user: #818cf8;
 }
 
 *, *::before, *::after {
@@ -467,8 +496,8 @@ html, body {
     </aside>
   </div>
 
-  <script type="application/json" id="fs-spec">{"flowstory":1,"id":"checkout","title":"Order checkout","type":"flow","source":"design","lanes":[{"id":"edge","label":"Client"},{"id":"app","label":"App"},{"id":"async","label":"Async"},{"id":"data","label":"Data"}],"nodes":[{"id":"client","kind":"client","lane":"edge","row":0,"label":"Web client","deep":"client"},{"id":"api","kind":"service","lane":"app","row":0,"label":"Orders API","deep":"api"},{"id":"queue","kind":"queue","lane":"async","row":0,"label":"order-events","deep":"queue"},{"id":"worker","kind":"worker","lane":"async","row":1,"label":"Fulfilment worker","deep":"worker"},{"id":"db","kind":"store","lane":"data","row":0,"label":"orders DB","deep":"db"}],"edges":[{"id":"client>api","from":"client","to":"api","label":"POST /orders"},{"id":"api>db","from":"api","to":"db","label":"insert"},{"id":"api>queue","from":"api","to":"queue","label":"OrderCreated"},{"id":"queue>worker","from":"queue","to":"worker"}],"deep":{"client":{"title":"Web client","kicker":"Client","role":"Submits the customer's checkout request and displays the order confirmation.","how":"Sends `POST /orders` with cart items and payment details over HTTPS.","weak":["Slow responses can cause users to click Pay twice if the button is not disabled."],"read":[{"title":"Idempotent requests guide","url":"https://example.com/idempotency"}]},"api":{"title":"Orders API","kicker":"Service","role":"Accepts checkouts, persists the order, and publishes an `OrderCreated` event.","how":"Validates the payload, writes a row to `orders DB`, and publishes to `order-events`.","weak":["Writing to the DB and publishing to the queue are separate steps; a crash in between loses the event."]},"queue":{"title":"order-events","kicker":"Queue","role":"Buffers `OrderCreated` events between the API and downstream fulfilment.","how":"Retains messages until `Fulfilment worker` acknowledges processing.","weak":["Delivers at-least-once, so consumers must be idempotent."]},"worker":{"title":"Fulfilment worker","kicker":"Worker","role":"Handles post-order work such as confirmation emails and stock reservation.","how":"Consumes `OrderCreated` messages from `order-events` asynchronously."},"db":{"title":"orders DB","kicker":"Store","role":"Durable source of truth for orders and their current status.","how":"Stores one row per order inserted by `Orders API`."}}}</script>
-  <script type="application/json" id="fs-layout">{"type":"flow","canvas":{"width":1128,"height":288},"lanes":[{"id":"edge","label":"Client","x":48,"w":200,"y":36,"h":216},{"id":"app","label":"App","x":312,"w":200,"y":36,"h":216},{"id":"async","label":"Async","x":576,"w":240,"y":36,"h":216},{"id":"data","label":"Data","x":880,"w":200,"y":36,"h":216}],"groups":[],"nodes":[{"id":"client","kind":"client","lane":"edge","row":0,"label":"Web client","sub":"","deep":"client","x":72,"y":74,"w":152,"h":46},{"id":"api","kind":"service","lane":"app","row":0,"label":"Orders API","sub":"","deep":"api","x":336,"y":74,"w":152,"h":46},{"id":"queue","kind":"queue","lane":"async","row":0,"label":"order-events","sub":"","deep":"queue","x":620,"y":74,"w":152,"h":46},{"id":"worker","kind":"worker","lane":"async","row":1,"label":"Fulfilment worker","sub":"","deep":"worker","x":600,"y":182,"w":192,"h":46},{"id":"db","kind":"store","lane":"data","row":0,"label":"orders DB","sub":"","deep":"db","x":904,"y":74,"w":152,"h":46}],"edges":[{"id":"client>api","from":"client","to":"api","label":"POST /orders","labelAt":null,"pts":[[224,97],[336,97]],"labelBox":{"x":233,"y":87,"w":94,"h":20}},{"id":"api>db","from":"api","to":"db","label":"insert","labelAt":null,"pts":[[488,80],[502,80],[502,60],[890,60],[890,97],[904,97]],"labelBox":{"x":670,"y":50,"w":53,"h":20}},{"id":"api>queue","from":"api","to":"queue","label":"OrderCreated","labelAt":null,"pts":[[488,114],[606,114],[606,97],[620,97]],"labelBox":{"x":500,"y":104,"w":94,"h":20}},{"id":"queue>worker","from":"queue","to":"worker","label":"","labelAt":null,"pts":[[696,120],[696,182]],"labelBox":null}]}</script>
+  <script type="application/json" id="fs-spec">{"flowstory":1,"id":"checkout","title":"Order checkout","type":"flow","source":"design","lanes":[{"id":"edge","label":"Client"},{"id":"app","label":"App"},{"id":"async","label":"Async"},{"id":"data","label":"Data"}],"nodes":[{"id":"client","kind":"client","lane":"edge","row":0,"label":"Web client","deep":"client"},{"id":"api","kind":"service","lane":"app","row":0,"label":"Orders API","deep":"api"},{"id":"queue","kind":"queue","lane":"async","row":0,"label":"order-events","deep":"queue"},{"id":"worker","kind":"worker","lane":"async","row":1,"label":"Fulfilment worker","deep":"worker"},{"id":"db","kind":"store","lane":"data","row":0,"label":"orders DB","deep":"db"}],"edges":[{"id":"client\u003eapi","from":"client","to":"api","label":"POST /orders"},{"id":"api\u003edb","from":"api","to":"db","label":"insert"},{"id":"api\u003equeue","from":"api","to":"queue","label":"OrderCreated"},{"id":"queue\u003eworker","from":"queue","to":"worker"}],"deep":{"client":{"title":"Web client","kicker":"Client","role":"Submits the customer's checkout request and displays the order confirmation.","how":"Sends `POST /orders` with cart items and payment details over HTTPS.","weak":["Slow responses can cause users to click Pay twice if the button is not disabled."],"read":[{"title":"Idempotent requests guide","url":"https://example.com/idempotency"}]},"api":{"title":"Orders API","kicker":"Service","role":"Accepts checkouts, persists the order, and publishes an `OrderCreated` event.","how":"Validates the payload, writes a row to `orders DB`, and publishes to `order-events`.","weak":["Writing to the DB and publishing to the queue are separate steps; a crash in between loses the event."]},"queue":{"title":"order-events","kicker":"Queue","role":"Buffers `OrderCreated` events between the API and downstream fulfilment.","how":"Retains messages until `Fulfilment worker` acknowledges processing.","weak":["Delivers at-least-once, so consumers must be idempotent."]},"worker":{"title":"Fulfilment worker","kicker":"Worker","role":"Handles post-order work such as confirmation emails and stock reservation.","how":"Consumes `OrderCreated` messages from `order-events` asynchronously."},"db":{"title":"orders DB","kicker":"Store","role":"Durable source of truth for orders and their current status.","how":"Stores one row per order inserted by `Orders API`."}}}</script>
+  <script type="application/json" id="fs-layout">{"type":"flow","canvas":{"width":1268,"height":302},"lanes":[{"id":"edge","label":"Client","x":48,"w":200,"gapBefore":64,"gapAfter":134,"headerBox":{"x":120,"y":42,"w":57,"h":24},"y":36,"h":230},{"id":"app","label":"App","x":382,"w":200,"gapBefore":134,"gapAfter":134,"headerBox":{"x":464,"y":42,"w":37,"h":24},"y":36,"h":230},{"id":"async","label":"Async","x":716,"w":240,"gapBefore":134,"gapAfter":64,"headerBox":{"x":811,"y":42,"w":51,"h":24},"y":36,"h":230},{"id":"data","label":"Data","x":1020,"w":200,"gapBefore":64,"gapAfter":64,"headerBox":{"x":1098,"y":42,"w":44,"h":24},"y":36,"h":230}],"groups":[],"nodes":[{"id":"client","kind":"client","lane":"edge","row":0,"label":"Web client","sub":"","deep":"client","x":72,"y":88,"w":152,"h":46},{"id":"api","kind":"service","lane":"app","row":0,"label":"Orders API","sub":"","deep":"api","x":406,"y":88,"w":152,"h":46},{"id":"queue","kind":"queue","lane":"async","row":0,"label":"order-events","sub":"","deep":"queue","x":760,"y":88,"w":152,"h":46},{"id":"worker","kind":"worker","lane":"async","row":1,"label":"Fulfilment worker","sub":"","deep":"worker","x":740,"y":196,"w":192,"h":46},{"id":"db","kind":"store","lane":"data","row":0,"label":"orders DB","sub":"","deep":"db","x":1044,"y":88,"w":152,"h":46}],"edges":[{"id":"client\u003eapi","from":"client","to":"api","label":"POST /orders","labelAt":null,"pts":[[224,111],[406,111]],"labelBox":{"x":268,"y":101,"w":94,"h":20}},{"id":"api\u003edb","from":"api","to":"db","label":"insert","labelAt":null,"pts":[[558,94],[572,94],[572,74],[1030,74],[1030,111],[1044,111]],"labelBox":{"x":706,"y":64,"w":53,"h":20}},{"id":"api\u003equeue","from":"api","to":"queue","label":"OrderCreated","labelAt":null,"pts":[[558,128],[746,128],[746,111],[760,111]],"labelBox":{"x":605,"y":118,"w":94,"h":20}},{"id":"queue\u003eworker","from":"queue","to":"worker","label":"","labelAt":null,"pts":[[836,134],[836,196]],"labelBox":null}]}</script>
   <script>/* flowstory runtime — md.js: safe inline-markup renderer (no innerHTML) */
 (function (global) {
   'use strict';
@@ -800,6 +829,11 @@ html, body {
     var spec = JSON.parse(specEl.textContent);
     var layout = JSON.parse(layoutEl.textContent);
 
+    var theme = spec.features && spec.features.theme;
+    if (theme === 'light' || theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+
     var titleEl = document.getElementById('fs-title');
     if (titleEl) titleEl.textContent = spec.title || spec.id;
     document.title = (spec.title || spec.id) + ' — flowstory';
@@ -816,12 +850,16 @@ html, body {
       pinnedNode: null,
       panX: 0,
       panY: 0,
-      scale: 1
+      scale: 1,
+      // True once the reader pans or zooms; a window resize then keeps their view.
+      userMoved: false
     };
 
     var deepDiveEnabled = !(spec.features && spec.features.deepDive === false);
     var sheet = global.FlowstorySheet.createSheet(spec, function () {
-      set({ pinnedNode: null });
+      // Closing returns focus to the node, which would re-trigger the
+      // focus spotlight; clear both so the canvas goes back to normal.
+      set({ pinnedNode: null, hoverNode: null });
     });
 
     // Build adjacency map for spotlight
@@ -1102,7 +1140,7 @@ html, body {
       var s = Math.max(0.2, Math.min(1.35, Math.min(sx, sy)));
       var px = Math.round((rect.width - W * s) / 2);
       var py = Math.round((rect.height - H * s) / 2);
-      set({ scale: s, panX: px, panY: py });
+      set({ scale: s, panX: px, panY: py, userMoved: false });
     }
 
     function zoomAt(factor, cx, cy) {
@@ -1114,7 +1152,8 @@ html, body {
       set({
         scale: nextScale,
         panX: vx - (vx - state.panX) * ratio,
-        panY: vy - (vy - state.panY) * ratio
+        panY: vy - (vy - state.panY) * ratio,
+        userMoved: true
       });
     }
 
@@ -1155,7 +1194,7 @@ html, body {
         var nx = e.clientX - dragStart.x;
         var ny = e.clientY - dragStart.y;
         if (Math.hypot(nx - state.panX, ny - state.panY) > 3) dragStart.moved = true;
-        set({ panX: nx, panY: ny });
+        set({ panX: nx, panY: ny, userMoved: state.userMoved || dragStart.moved });
       }
     });
 
@@ -1189,7 +1228,8 @@ html, body {
       set({
         scale: 1,
         panX: Math.round((rect.width - W) / 2),
-        panY: Math.round((rect.height - H) / 2)
+        panY: Math.round((rect.height - H) / 2),
+        userMoved: true
       });
     });
     if (btnFit) btnFit.addEventListener('click', fitToScreen);
@@ -1201,14 +1241,16 @@ html, body {
       if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomAt(1.15); }
       else if (e.key === '-') { e.preventDefault(); zoomAt(0.87); }
       else if (e.key === '0') { e.preventDefault(); fitToScreen(); }
-      else if (e.key === 'ArrowLeft') { e.preventDefault(); set({ panX: state.panX + 40 }); }
-      else if (e.key === 'ArrowRight') { e.preventDefault(); set({ panX: state.panX - 40 }); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); set({ panY: state.panY + 40 }); }
-      else if (e.key === 'ArrowDown') { e.preventDefault(); set({ panY: state.panY - 40 }); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); set({ panX: state.panX + 40, userMoved: true }); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); set({ panX: state.panX - 40, userMoved: true }); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); set({ panY: state.panY + 40, userMoved: true }); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); set({ panY: state.panY - 40, userMoved: true }); }
       else if (e.key === 'Escape') { set({ pinnedNode: null }); }
     });
 
-    window.addEventListener('resize', fitToScreen);
+    window.addEventListener('resize', function () {
+      if (!state.userMoved) fitToScreen();
+    });
     fitToScreen();
   }
 

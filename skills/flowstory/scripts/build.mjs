@@ -15,20 +15,24 @@ import { checkLayout } from './lib/geometry.mjs';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SKILL_ROOT = path.resolve(__dirname, '..');
 
-function escapeJsonForScript(obj) {
-  return JSON.stringify(obj).replace(/<\//g, '<\\/');
+// Escape every character that could let JSON data change how the HTML parser
+// reads the surrounding <script> block (e.g. "</script>" or "<!--<script>").
+export function escapeJsonForScript(obj) {
+  return JSON.stringify(obj)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
 }
 
+// The page goes next to its spec: flowstory/<id>/spec.json -> flowstory/<id>/<id>.html
 function resolveOutputPath(specAbsPath, specId, outArg) {
   if (outArg) return path.resolve(outArg);
-  const norm = specAbsPath.replace(/\\/g, '/');
-  if (norm.includes('/examples/')) {
-    return path.join(path.dirname(specAbsPath), `${specId}.html`);
-  }
-  return path.resolve(process.cwd(), 'flowstory', specId, `${specId}.html`);
+  return path.join(path.dirname(specAbsPath), `${specId}.html`);
 }
 
-function main() {
+export function main() {
   const args = process.argv.slice(2);
   const outIdx = args.indexOf('--out');
   const outArg = outIdx !== -1 ? args[outIdx + 1] : null;
@@ -103,4 +107,6 @@ function main() {
   console.log(`Built ${finalPath} (${(bytes / 1024).toFixed(1)} KB, ${layout.nodes.length} nodes, ${layout.edges.length} edges)`);
 }
 
-main();
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main();
+}

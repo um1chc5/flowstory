@@ -49,6 +49,8 @@ function checkUnsafeMarkup(text, jsonPath, warnings) {
   }
 }
 
+const SUPPORTED_TYPES = new Set(['flow']);
+
 export function validateSpec(spec) {
   const schemaPath = path.join(__dirname, 'spec.schema.json');
   const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
@@ -281,6 +283,39 @@ export function validateSpec(spec) {
 
   if (typeof spec.title === 'string') {
     checkUnsafeMarkup(spec.title, '/title', warnings);
+  }
+
+  // Diagram types the layout can draw today. The schema lists the planned ones.
+  if (typeof spec.type === 'string' && !SUPPORTED_TYPES.has(spec.type)) {
+    errors.push({
+      code: 'type-unsupported',
+      path: '/type',
+      message: `Diagram type '${spec.type}' is planned but not supported yet.`,
+      fix: `Use one of: ${[...SUPPORTED_TYPES].join(', ')}. Draw other system diagrams as 'flow' for now.`
+    });
+  }
+
+  // Two nodes in the same lane and row (without manual x/y) would overlap.
+  if (Array.isArray(spec.nodes)) {
+    const cells = new Map();
+    spec.nodes.forEach((node, i) => {
+      if (!node || typeof node.lane !== 'string' || typeof node.row !== 'number') return;
+      if (typeof node.x === 'number' || typeof node.y === 'number') return;
+      const key = `${node.lane}|${node.row}`;
+      if (cells.has(key)) {
+        const other = cells.get(key);
+        const usedRows = spec.nodes.filter((n) => n && n.lane === node.lane && typeof n.row === 'number').map((n) => n.row);
+        const freeRow = Math.max(...usedRows) + 1;
+        errors.push({
+          code: 'cell-conflict',
+          path: `/nodes/${i}/row`,
+          message: `Node '${node.id}' is in the same lane and row as '${other}' (lane '${node.lane}', row ${node.row}).`,
+          fix: `Move '${node.id}' to a free row (e.g. row ${freeRow}) or to another lane.`
+        });
+      } else {
+        cells.set(key, node.id);
+      }
+    });
   }
 
   return {

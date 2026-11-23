@@ -16,7 +16,7 @@ import {
 
 const CANVAS_PAD_X = 48;
 const CANVAS_PAD_Y = 36;
-const LANE_HEADER_H = 38;
+const LANE_HEADER_H = 52;
 const LANE_PAD_X = 24;
 const LANE_GAP = 64;
 const ROW_PITCH = 108;
@@ -25,6 +25,23 @@ const NODE_H_SUB = 60;
 const NODE_MIN_W = 152;
 const PORT_STUB = 14;
 const NODE_CLEARANCE = 6;
+const GROUP_PAD_TOP = 28;
+
+function groupDepth(groups) {
+  const byId = new Map(groups.map((g) => [g.id, g]));
+  const memo = new Map();
+  function depth(id, seen) {
+    if (memo.has(id)) return memo.get(id);
+    if (seen.has(id)) return 1;
+    seen.add(id);
+    const g = byId.get(id);
+    let d = 1;
+    for (const c of (g && g.groups) || []) d = Math.max(d, 1 + depth(c, seen));
+    memo.set(id, d);
+    return d;
+  }
+  return Math.max(1, ...groups.map((g) => depth(g.id, new Set())));
+}
 
 class MinHeap {
   constructor() {
@@ -193,7 +210,7 @@ function buildChannelGrid(nodes, lanes, ports, canvasW, canvasH) {
   const ys = [16, canvasH - 16];
 
   for (const l of lanes) {
-    xs.push(l.x - LANE_GAP / 2, l.x + l.w + LANE_GAP / 2);
+    xs.push(l.x - (l.gapBefore || LANE_GAP) / 2, l.x + l.w + (l.gapAfter || LANE_GAP) / 2);
   }
   for (const n of nodes) {
     xs.push(n.x - PORT_STUB, n.x + n.w + PORT_STUB);
@@ -236,7 +253,7 @@ function nearestIndex(arr, val) {
   return best;
 }
 
-function routeEdgeAStar(edge, port, nodes, routedSegments, grid) {
+function routeEdgeAStar(edge, port, nodes, routedSegments, grid, headerBoxes = []) {
   const { xs, ys } = grid;
   const nx = xs.length;
   const ny = ys.length;
@@ -252,7 +269,7 @@ function routeEdgeAStar(edge, port, nodes, routedSegments, grid) {
     y: n.y,
     w: n.w,
     h: n.h
-  }));
+  })).concat(headerBoxes);
 
   function segBlocked(p1, p2) {
     for (const obs of obstacles) {
@@ -378,7 +395,7 @@ function routeEdgeAStar(edge, port, nodes, routedSegments, grid) {
   return simplifyPolyline([port.fromPt, port.fromStub, ...pathPts, port.toStub, port.toPt]);
 }
 
-function placeEdgeLabels(edges, nodes, routedEdges) {
+function placeEdgeLabels(edges, nodes, routedEdges, headerBoxes = []) {
   const degree = new Map();
   for (const n of nodes) degree.set(n.id, 0);
   for (const e of edges) {
@@ -392,6 +409,35 @@ function placeEdgeLabels(edges, nodes, routedEdges) {
     if (db !== da) return db - da;
     return (b.label || '').length - (a.label || '').length;
   });
+
+  // Parallel edges (same pair of nodes) are routed close together, so their
+  // labels get a fixed order: first one on the outer side, middle ones on
+  // their own line, last one on the other outer side.
+  const prefOffset = new Map();
+  const pairs = new Map();
+  for (const re of routedEdges) {
+    if (!re.label || re.labelAt) continue;
+    const key = [re.from, re.to].sort().join('|');
+    if (!pairs.has(key)) pairs.set(key, []);
+    pairs.get(key).push(re);
+  }
+  const perpCoord = (re) => {
+    let best = null;
+    for (let i = 0; i < re.pts.length - 1; i++) {
+      const [a, b] = [re.pts[i], re.pts[i + 1]];
+      const len = Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+      if (!best || len > best.len) best = { len, c: Math.abs(a[1] - b[1]) < 1 ? a[1] : a[0] };
+    }
+    return best ? best.c : 0;
+  };
+  for (const group of pairs.values()) {
+    if (group.length < 2) continue;
+    group.sort((a, b) => perpCoord(a) - perpCoord(b));
+    const edge = EDGE_LABEL_H / 2 + 2;
+    group.forEach((re, i) => {
+      prefOffset.set(re.id, i === 0 ? -edge : i === group.length - 1 ? edge : 0);
+    });
+  }
 
   const placedLabels = [];
   const allSegments = [];
@@ -432,7 +478,9 @@ function placeEdgeLabels(edges, nodes, routedEdges) {
     segs.sort((a, b) => b.len - a.len);
 
     const candidates = [];
-    const offsets = [0, -16, 16, -32, 32, -48, 48, -64, 64];
+    // Near offsets keep the label touching its own edge. Far offsets are a
+    // last resort; the label-detached check reports them.
+    const offsets = [0, -12, 12, -14, 14, -32, 32, -48, 48];
     const fracs = [0.5, 0.35, 0.65];
 
     for (let si = 0; si < segs.length; si++) {
@@ -446,7 +494,9 @@ function placeEdgeLabels(edges, nodes, routedEdges) {
           const cy = isHoriz ? by + off : by;
           candidates.push({
             box: { x: Math.round(cx - w / 2), y: Math.round(cy - h / 2), w, h },
-            prefPenalty: si * 15 + Math.abs(frac - 0.5) * 30 + Math.abs(off) * 0.6
+            prefPenalty: si * 15 + Math.abs(frac - 0.5) * 30 +
+              (prefOffset.has(re.id) ? Math.abs(off - prefOffset.get(re.id)) * 3 : Math.abs(off) * 0.6) +
+              (Math.abs(off) > 14 ? 5000 : 0)
           });
         }
       }
@@ -473,6 +523,9 @@ function placeEdgeLabels(edges, nodes, routedEdges) {
       }
       for (const pl of placedLabels) {
         if (boxesOverlap(b, pl.box, 4)) score += 1e6;
+      }
+      for (const hb of headerBoxes) {
+        if (boxesOverlap(b, hb, 2)) score += 1e6;
       }
       for (const seg of allSegments) {
         if (seg.edgeId === re.id) continue;
@@ -537,7 +590,7 @@ function computeGroupBoxes(spec, nodeMap) {
     }
 
     const padX = 16;
-    const padTop = 28;
+    const padTop = GROUP_PAD_TOP;
     const padBot = 14;
     const box = {
       id: g.id,
@@ -558,7 +611,9 @@ function computeGroupBoxes(spec, nodeMap) {
 export function layoutFlow(spec) {
   const sizes = computeNodeSizes(spec);
   const hasGroups = Array.isArray(spec.groups) && spec.groups.length > 0;
-  const groupTopExtra = hasGroups ? 24 : 0;
+  // Each nesting level adds GROUP_PAD_TOP above its nodes; leave room for all
+  // of them so no group title reaches into the lane header.
+  const groupTopExtra = hasGroups ? groupDepth(spec.groups) * GROUP_PAD_TOP + 4 : 0;
 
   // Compute lane widths from widest node in each lane
   const laneMaxNodeW = new Map();
@@ -571,17 +626,38 @@ export function layoutFlow(spec) {
     laneMaxNodeW.set(n.lane, Math.max(laneMaxNodeW.get(n.lane) || NODE_MIN_W, s.w));
   }
 
+  // Widen the gap between neighbouring lanes so labels of edges that cross
+  // it fit next to their line, with room for the arrowhead.
+  const laneIndex = new Map(spec.lanes.map((l, i) => [l.id, i]));
+  const nodeLane = new Map(spec.nodes.map((n) => [n.id, n.lane]));
+  const gapAfter = spec.lanes.map(() => LANE_GAP);
+  for (const e of spec.edges) {
+    if (!e.label) continue;
+    const a = laneIndex.get(nodeLane.get(e.from));
+    const b = laneIndex.get(nodeLane.get(e.to));
+    if (a === undefined || b === undefined || Math.abs(a - b) !== 1) continue;
+    const need = estimateTextWidth(e.label, 11) + LABEL_PAD_X + 2 * PORT_STUB + 12;
+    const gi = Math.min(a, b);
+    gapAfter[gi] = Math.max(gapAfter[gi], need);
+  }
+
   const lanes = [];
   let curX = CANVAS_PAD_X;
-  for (const l of spec.lanes) {
+  spec.lanes.forEach((l, i) => {
     const w = laneMaxNodeW.get(l.id) + LANE_PAD_X * 2;
     lanes.push({
       id: l.id,
       label: l.label || l.id,
       x: curX,
-      w
+      w,
+      gapBefore: i > 0 ? gapAfter[i - 1] : LANE_GAP,
+      gapAfter: gapAfter[i]
     });
-    curX += w + LANE_GAP;
+    curX += w + gapAfter[i];
+  });
+  for (const l of lanes) {
+    const tw = estimateTextWidth(String(l.label).toUpperCase(), 11) + 16;
+    l.headerBox = { x: Math.round(l.x + l.w / 2 - tw / 2), y: CANVAS_PAD_Y + 6, w: tw, h: 24 };
   }
   const laneMap = new Map(lanes.map((l) => [l.id, l]));
 
@@ -612,6 +688,10 @@ export function layoutFlow(spec) {
 
   // Compute groups
   const groups = computeGroupBoxes(spec, nodeMap);
+  for (const g of groups) {
+    g.labelBox = { x: g.x + 8, y: g.y + 4, w: estimateTextWidth(g.label, 11) + 10, h: 20 };
+  }
+  const headerBoxes = lanes.map((l) => l.headerBox).concat(groups.map((g) => g.labelBox));
 
   // Initial canvas bounds
   let maxX = lanes.length > 0 ? lanes[lanes.length - 1].x + lanes[lanes.length - 1].w + CANVAS_PAD_X : 600;
@@ -646,7 +726,7 @@ export function layoutFlow(spec) {
       pts = e.pts.map((p) => [Math.round(p[0]), Math.round(p[1])]);
     } else {
       const port = ports.get(e.id);
-      pts = routeEdgeAStar(e, port, nodes, routedSegments, grid);
+      pts = routeEdgeAStar(e, port, nodes, routedSegments, grid, headerBoxes);
       for (let i = 0; i < pts.length - 1; i++) {
         routedSegments.push([pts[i], pts[i + 1]]);
       }
@@ -667,7 +747,7 @@ export function layoutFlow(spec) {
   });
 
   // Place labels greedily
-  const labelBounds = placeEdgeLabels(spec.edges, nodes, routedEdges);
+  const labelBounds = placeEdgeLabels(spec.edges, nodes, routedEdges, headerBoxes);
   maxX = Math.max(maxX, labelBounds.maxRight + CANVAS_PAD_X);
   maxY = Math.max(maxY, labelBounds.maxBottom + CANVAS_PAD_Y);
 

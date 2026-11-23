@@ -1,0 +1,48 @@
+{
+  "expect": "label-overlap",
+  "spec": {
+    "flowstory": 1,
+    "id": "label-on-header",
+    "title": "Label forced onto a lane title",
+    "type": "flow",
+    "source": "design",
+    "lanes": [
+      {
+        "id": "a",
+        "label": "Alpha"
+      },
+      {
+        "id": "b",
+        "label": "Bravo"
+      }
+    ],
+    "nodes": [
+      {
+        "id": "x",
+        "kind": "service",
+        "lane": "a",
+        "row": 0,
+        "label": "X"
+      },
+      {
+        "id": "y",
+        "kind": "service",
+        "lane": "b",
+        "row": 0,
+        "label": "Y"
+      }
+    ],
+    "edges": [
+      {
+        "id": "x>y",
+        "from": "x",
+        "to": "y",
+        "label": "forced",
+        "labelAt": [
+          124,
+          57
+        ]
+      }
+    ]
+  }
+}

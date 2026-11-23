@@ -50,6 +50,11 @@
     var spec = JSON.parse(specEl.textContent);
     var layout = JSON.parse(layoutEl.textContent);
 
+    var theme = spec.features && spec.features.theme;
+    if (theme === 'light' || theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+
     var titleEl = document.getElementById('fs-title');
     if (titleEl) titleEl.textContent = spec.title || spec.id;
     document.title = (spec.title || spec.id) + ' — flowstory';
@@ -66,12 +71,16 @@
       pinnedNode: null,
       panX: 0,
       panY: 0,
-      scale: 1
+      scale: 1,
+      // True once the reader pans or zooms; a window resize then keeps their view.
+      userMoved: false
     };
 
     var deepDiveEnabled = !(spec.features && spec.features.deepDive === false);
     var sheet = global.FlowstorySheet.createSheet(spec, function () {
-      set({ pinnedNode: null });
+      // Closing returns focus to the node, which would re-trigger the
+      // focus spotlight; clear both so the canvas goes back to normal.
+      set({ pinnedNode: null, hoverNode: null });
     });
 
     // Build adjacency map for spotlight
@@ -352,7 +361,7 @@
       var s = Math.max(0.2, Math.min(1.35, Math.min(sx, sy)));
       var px = Math.round((rect.width - W * s) / 2);
       var py = Math.round((rect.height - H * s) / 2);
-      set({ scale: s, panX: px, panY: py });
+      set({ scale: s, panX: px, panY: py, userMoved: false });
     }
 
     function zoomAt(factor, cx, cy) {
@@ -364,7 +373,8 @@
       set({
         scale: nextScale,
         panX: vx - (vx - state.panX) * ratio,
-        panY: vy - (vy - state.panY) * ratio
+        panY: vy - (vy - state.panY) * ratio,
+        userMoved: true
       });
     }
 
@@ -405,7 +415,7 @@
         var nx = e.clientX - dragStart.x;
         var ny = e.clientY - dragStart.y;
         if (Math.hypot(nx - state.panX, ny - state.panY) > 3) dragStart.moved = true;
-        set({ panX: nx, panY: ny });
+        set({ panX: nx, panY: ny, userMoved: state.userMoved || dragStart.moved });
       }
     });
 
@@ -439,7 +449,8 @@
       set({
         scale: 1,
         panX: Math.round((rect.width - W) / 2),
-        panY: Math.round((rect.height - H) / 2)
+        panY: Math.round((rect.height - H) / 2),
+        userMoved: true
       });
     });
     if (btnFit) btnFit.addEventListener('click', fitToScreen);
@@ -451,14 +462,16 @@
       if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomAt(1.15); }
       else if (e.key === '-') { e.preventDefault(); zoomAt(0.87); }
       else if (e.key === '0') { e.preventDefault(); fitToScreen(); }
-      else if (e.key === 'ArrowLeft') { e.preventDefault(); set({ panX: state.panX + 40 }); }
-      else if (e.key === 'ArrowRight') { e.preventDefault(); set({ panX: state.panX - 40 }); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); set({ panY: state.panY + 40 }); }
-      else if (e.key === 'ArrowDown') { e.preventDefault(); set({ panY: state.panY - 40 }); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); set({ panX: state.panX + 40, userMoved: true }); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); set({ panX: state.panX - 40, userMoved: true }); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); set({ panY: state.panY + 40, userMoved: true }); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); set({ panY: state.panY - 40, userMoved: true }); }
       else if (e.key === 'Escape') { set({ pinnedNode: null }); }
     });
 
-    window.addEventListener('resize', fitToScreen);
+    window.addEventListener('resize', function () {
+      if (!state.userMoved) fitToScreen();
+    });
     fitToScreen();
   }
 

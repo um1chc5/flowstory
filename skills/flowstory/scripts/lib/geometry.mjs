@@ -6,6 +6,24 @@ export const MIN_NODE_GAP = 10;
 export const LABEL_PAD_X = 12;
 export const LABEL_PAD_Y = 5;
 export const EDGE_LABEL_H = 20;
+export const LABEL_MAX_GAP = 6;
+
+/** Shortest distance from an axis-aligned box to a polyline (0 if they touch). */
+export function distanceBoxToPolyline(box, pts) {
+  let best = Infinity;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [x1, y1] = pts[i];
+    const [x2, y2] = pts[i + 1];
+    if (segmentIntersectsBox(pts[i], pts[i + 1], box, 0)) return 0;
+    // Orthogonal segments: distance between two axis-aligned rectangles.
+    const sx0 = Math.min(x1, x2), sx1 = Math.max(x1, x2);
+    const sy0 = Math.min(y1, y2), sy1 = Math.max(y1, y2);
+    const dx = Math.max(0, box.x - sx1, sx0 - (box.x + box.w));
+    const dy = Math.max(0, box.y - sy1, sy0 - (box.y + box.h));
+    best = Math.min(best, Math.hypot(dx, dy));
+  }
+  return best;
+}
 
 /**
  * Conservative deterministic text width estimate (px) for system sans-serif.
@@ -121,6 +139,10 @@ export function checkLayout(spec, layout) {
     : ['default'];
 
   const nodeMap = new Map(layout.nodes.map((n) => [n.id, n]));
+  // Lane titles and group titles: nothing may be drawn over them.
+  const headers = []
+    .concat((layout.lanes || []).filter((l) => l.headerBox).map((l) => ({ what: `lane '${l.id}' title`, box: l.headerBox })))
+    .concat((layout.groups || []).filter((g) => g.labelBox).map((g) => ({ what: `group '${g.id}' title`, box: g.labelBox })));
 
   for (const viewId of viewIds) {
     const nodes = layout.nodes;
@@ -168,6 +190,17 @@ export function checkLayout(spec, layout) {
       for (let s = 0; s < pts.length - 1; s++) {
         const p1 = pts[s];
         const p2 = pts[s + 1];
+        for (const hd of headers) {
+          if (segmentIntersectsBox(p1, p2, hd.box, 0)) {
+            errors.push({
+              code: 'edge-through-header',
+              view: viewId,
+              edge: edge.id,
+              message: `Edge '${edge.id}' crosses the ${hd.what}.`
+            });
+            break;
+          }
+        }
         for (const node of nodes) {
           if (node.id === edge.from || node.id === edge.to) continue;
           if (segmentIntersectsBox(p1, p2, node, 1)) {
@@ -213,6 +246,26 @@ export function checkLayout(spec, layout) {
             message: `Label for edge '${edge.id}' overlaps node '${node.id}'.`
           });
         }
+      }
+
+      for (const hd of headers) {
+        if (boxesOverlap(lb, hd.box, 0)) {
+          errors.push({
+            code: 'label-overlap',
+            view: viewId,
+            edge: edge.id,
+            message: `Label for edge '${edge.id}' covers the ${hd.what}.`
+          });
+        }
+      }
+
+      if (!edge.labelAt && distanceBoxToPolyline(lb, edge.pts || []) > LABEL_MAX_GAP) {
+        errors.push({
+          code: 'label-detached',
+          view: viewId,
+          edge: edge.id,
+          message: `Label for edge '${edge.id}' is more than ${LABEL_MAX_GAP}px away from its edge.`
+        });
       }
 
       for (const prev of labelBoxes) {

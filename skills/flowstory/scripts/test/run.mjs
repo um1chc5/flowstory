@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { validateSpec } from '../validate.mjs';
 import { computeLayout } from '../layout.mjs';
 import { checkLayout } from '../lib/geometry.mjs';
+import { escapeJsonForScript } from '../build.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixturesDir = path.join(__dirname, 'fixtures');
@@ -87,6 +88,16 @@ const valTests = [
     expectError: 'deep-section'
   },
   {
+    name: 'validate: cell-conflict',
+    spec: { ...baseSpec, nodes: [...baseSpec.nodes, { id: 'n2', kind: 'service', lane: 'a', row: 0, label: 'N2' }] },
+    expectError: 'cell-conflict'
+  },
+  {
+    name: 'validate: type-unsupported',
+    spec: { ...baseSpec, type: 'sequence' },
+    expectError: 'type-unsupported'
+  },
+  {
     name: 'validate: markup-unsafe warning',
     spec: { ...baseSpec, nodes: [{ id: 'n1', kind: 'service', lane: 'a', row: 0, label: '<script>alert(1)</script>', deep: 'n1' }] },
     expectWarning: 'markup-unsafe'
@@ -107,6 +118,20 @@ for (const vt of valTests) {
     } else {
       fail(vt.name, `Expected warning '${vt.expectWarning}', got ${JSON.stringify(res)}`);
     }
+  }
+}
+
+// 3. Build: data embedded in <script type="application/json"> must not be able
+// to change how the HTML parser reads the page.
+{
+  const nasty = { t: '</script><!--<script>a & b\u2028', n: 1 };
+  const out = escapeJsonForScript(nasty);
+  if (/[<>&\u2028\u2029]/.test(out)) {
+    fail('build: JSON escaping', `Unescaped character in ${out}`);
+  } else if (JSON.stringify(JSON.parse(out)) !== JSON.stringify(nasty)) {
+    fail('build: JSON escaping', 'Escaped JSON does not round-trip');
+  } else {
+    pass('build: JSON escaping');
   }
 }
 

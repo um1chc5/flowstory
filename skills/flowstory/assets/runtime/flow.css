@@ -26,8 +26,9 @@
   --kind-user: #4f46e5;
 }
 
+/* Dark theme: follows the OS unless features.theme forces light or dark. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0b1120;
     --bg-dot: #1e293b;
     --surface: #111827;
@@ -54,6 +55,34 @@
     --kind-function: #2dd4bf;
     --kind-user: #818cf8;
   }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b1120;
+  --bg-dot: #1e293b;
+  --surface: #111827;
+  --surface-2: #1e293b;
+  --border: #334155;
+  --border-subtle: #1e293b;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --edge: #94a3b8;
+  --edge-hi: #60a5fa;
+  --lane-bg: rgba(30, 41, 59, 0.55);
+  --group-bg: rgba(96, 165, 250, 0.06);
+  --group-border: #3b82f6;
+  --shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --focus-ring: #60a5fa;
+
+  --kind-client: #38bdf8;
+  --kind-service: #60a5fa;
+  --kind-external: #a78bfa;
+  --kind-queue: #fbbf24;
+  --kind-worker: #34d399;
+  --kind-store: #f87171;
+  --kind-cache: #fb923c;
+  --kind-function: #2dd4bf;
+  --kind-user: #818cf8;
 }
 
 *, *::before, *::after {
