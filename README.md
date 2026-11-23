@@ -60,3 +60,7 @@ With a repo, the agent traces the system from the code and cites files pinned to
 ## Origin
 
 flowstory generalizes a hand-built research page: an animated system diagram with views, scenarios, callouts, a deep-dive sheet, and a story panel. The page worked well for presenting an architecture proposal to a tech lead. The goal is to let any agent produce that kind of page, or just a good plain diagram, for any system.
+
+## License
+
+[MIT](LICENSE)

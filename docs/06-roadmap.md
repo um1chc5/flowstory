@@ -38,7 +38,7 @@ Candidate → checks → final; `serve.mjs` with last-good-build; per-spec modul
 Final `SKILL.md` and `references/`, the three examples. Done when an agent with only the skill installed picks the right preset for "draw", "compare", "explain", and "propose", and builds the checkout pages from a sample repo in one session.
 
 **M6 · Release prep**
-Final name, license, README screenshots/GIF, plugin manifests, a short demo video recorded by hand.
+Final name, README screenshots/GIF, plugin manifests, a short demo video recorded by hand.
 
 **v1.1 → v1.3 · More types**
 State machine, then pipeline/DAG, then deployment. Each one is a layout module, a runtime type module, fixtures, and a reference section.
@@ -61,7 +61,7 @@ State machine, then pipeline/DAG, then deployment. Each one is a layout module, 
 | # | Question | Leaning |
 | --- | --- | --- |
 | 1 | Final name. `flowstory` may collide with existing projects. | Search npm, GitHub, and skill registries before M6 |
-| 2 | License | MIT, unless a dependency-free runtime makes Apache-2.0's patent grant worth it |
+| 2 | License | **Decided: MIT** (see `LICENSE`) |
 | 3 | Other host manifests in v1? | No. Ship the Agent Skills layout + `.claude-plugin`; add others after feedback |
 | 4 | Should `design` specs allow a `today` view at all? | Yes, as "current plan", but `role: baseline` is enough; no special case |
 | 5 | How strict should drift be by default? | Warning locally, `--strict` in CI |
