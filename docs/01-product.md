@@ -2,7 +2,7 @@
 
 ## One line
 
-**A diagram tool for software systems, where every diagram can have views shown as diffs and scenarios that play through it, all built from one validated data spec that can be checked against the code.**
+**An agent skill that draws software systems as interactive diagrams you can compare across versions and play a request through, for an existing codebase or a design that doesn't exist yet.**
 
 Ask for a diagram and you get a clean, static one. Add views, playback, callouts, or a proposal only when they help.
 

@@ -22,7 +22,7 @@ Keeping review as the only entry point would also make the tool awkward for the 
 ## Consequences
 
 - A plain diagram request gets a plain diagram; the review features no longer get in the way.
-- We now overlap more with archify and diagram-design. The pitch has to be clear: system diagrams that diff, play, and stay in sync with code.
+- We now overlap more with archify and diagram-design. The pitch has to be clear: interactive system diagrams you can compare across versions and play a request through, from code or from a new design. Sync with the code is a supporting feature, not the headline.
 - The runtime and layout split into per-type modules and per-layer modules, and `build` inlines only what a spec uses.
 - The honesty rules still apply in full whenever the Review layer is on.
 - The name "flowstory" may no longer fit (roadmap open question 7).

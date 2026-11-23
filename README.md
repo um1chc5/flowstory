@@ -2,7 +2,7 @@
 
 > **Status: design phase.** Only docs exist so far. Nothing is published. `flowstory` is a working name.
 
-**An agent skill for diagrams of software systems that can diff, play, and stay in sync with the code.**
+**An agent skill that draws software systems as interactive diagrams you can compare across versions and play a request through, for an existing codebase or a design that doesn't exist yet.**
 
 Ask your agent for a diagram:
 
