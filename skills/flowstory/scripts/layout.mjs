@@ -22,7 +22,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const jsonFlag = args.includes('--json');
   const outIdx = args.indexOf('--out');
   const outArg = outIdx !== -1 ? args[outIdx + 1] : null;
-  const fileArg = args.find((a, idx) => !a.startsWith('-') && idx !== outIdx + 1);
+  const fileArg = args.find((a, idx) => !a.startsWith('-') && (outIdx === -1 || idx !== outIdx + 1));
 
   if (!fileArg) {
     console.error('Usage: node scripts/layout.mjs <spec.json> [--out <layout.json>] [--check] [--json]');

@@ -1,0 +1,62 @@
+{
+  "flowstory": 1,
+  "id": "checkout",
+  "title": "Order checkout",
+  "type": "flow",
+  "source": "design",
+  "lanes": [
+    { "id": "edge", "label": "Client" },
+    { "id": "app", "label": "App" },
+    { "id": "async", "label": "Async" },
+    { "id": "data", "label": "Data" }
+  ],
+  "nodes": [
+    { "id": "client", "kind": "client",  "lane": "edge",  "row": 0, "label": "Web client",        "deep": "client" },
+    { "id": "api",    "kind": "service", "lane": "app",   "row": 0, "label": "Orders API",        "deep": "api" },
+    { "id": "queue",  "kind": "queue",   "lane": "async", "row": 0, "label": "order-events",      "deep": "queue" },
+    { "id": "worker", "kind": "worker",  "lane": "async", "row": 1, "label": "Fulfilment worker", "deep": "worker" },
+    { "id": "db",     "kind": "store",   "lane": "data",  "row": 0, "label": "orders DB",         "deep": "db" }
+  ],
+  "edges": [
+    { "id": "client>api",   "from": "client", "to": "api",    "label": "POST /orders" },
+    { "id": "api>db",       "from": "api",    "to": "db",     "label": "insert" },
+    { "id": "api>queue",    "from": "api",    "to": "queue",  "label": "OrderCreated" },
+    { "id": "queue>worker", "from": "queue",  "to": "worker" }
+  ],
+  "deep": {
+    "client": {
+      "title": "Web client",
+      "kicker": "Client",
+      "role": "Submits the customer's checkout request and displays the order confirmation.",
+      "how": "Sends `POST /orders` with cart items and payment details over HTTPS.",
+      "weak": ["Slow responses can cause users to click Pay twice if the button is not disabled."],
+      "read": [{ "title": "Idempotent requests guide", "url": "https://example.com/idempotency" }]
+    },
+    "api": {
+      "title": "Orders API",
+      "kicker": "Service",
+      "role": "Accepts checkouts, persists the order, and publishes an `OrderCreated` event.",
+      "how": "Validates the payload, writes a row to `orders DB`, and publishes to `order-events`.",
+      "weak": ["Writing to the DB and publishing to the queue are separate steps; a crash in between loses the event."]
+    },
+    "queue": {
+      "title": "order-events",
+      "kicker": "Queue",
+      "role": "Buffers `OrderCreated` events between the API and downstream fulfilment.",
+      "how": "Retains messages until `Fulfilment worker` acknowledges processing.",
+      "weak": ["Delivers at-least-once, so consumers must be idempotent."]
+    },
+    "worker": {
+      "title": "Fulfilment worker",
+      "kicker": "Worker",
+      "role": "Handles post-order work such as confirmation emails and stock reservation.",
+      "how": "Consumes `OrderCreated` messages from `order-events` asynchronously."
+    },
+    "db": {
+      "title": "orders DB",
+      "kicker": "Store",
+      "role": "Durable source of truth for orders and their current status.",
+      "how": "Stores one row per order inserted by `Orders API`."
+    }
+  }
+}
