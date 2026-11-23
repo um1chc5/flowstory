@@ -9,16 +9,20 @@ skills/flowstory/
   SKILL.md                    lean entry point: when to use, the workflow, hard rules
   references/
     spec-schema.md            every field, with examples (03 · Spec format, in full)
-    diagram-types.md          flow vs sequence: when to use each, layout tips
+    diagram-types.md          each type: when to use it, what lanes/rows mean, layout tips
     proposal.md               proposal.json, PROPOSAL.md sections, numbering rules
     storytelling.md           choosing scenarios, writing captions and chapters
     design.md                 visual rules: kinds, colours, status, motion
   assets/
     template.html             page shell with placeholders for CSS, JS, and data
     runtime/
-      flow.js                 renderer + player (canvas, packets, camera, spotlight)
+      core.js                 state, canvas, render of nodes/edges/groups, pan/zoom, spotlight
+      layers.js               views (rules, diff overlay), callouts, review (roles, verdicts)
+      player.js               playback: steps, packets, camera, scrubber, motion policy
+      types/flow.js           type modules: render hints per diagram type
+      types/sequence.js
       sheet.js                deep-dive sheet
-      story.js                story panel and proposal view
+      story.js                story panel and proposal panel
       md.js                   safe inline-markup renderer
       flow.css                all styles, light + dark tokens
   scripts/                    Node ≥ 18, no dependencies
@@ -28,11 +32,13 @@ skills/flowstory/
     check.mjs
     serve.mjs
     lib/                      shared helpers (schema, geometry, git)
+    lib/types/                one layout module per diagram type (flow.mjs, sequence.mjs)
     test/                     fixtures + adversarial geometry tests
     spec.schema.json
   examples/
-    checkout-flow/            spec.json, proposal.json, checkout.html, PROPOSAL.md
-    auth-sequence/            spec.json, auth.html
+    checkout-diagram/         core only: the smallest spec
+    checkout-flow/            every layer: spec.json, proposal.json, checkout.html, PROPOSAL.md
+    auth-sequence/            sequence + playback, greenfield (source: design)
 .claude-plugin/plugin.json    plugin manifest (repo root)
 ```
 
@@ -72,13 +78,13 @@ spec.json ─▶ validate ─▶ layout ─▶ build (candidate) ─▶ checks �
 
 ## Runtime
 
-The runtime is a small set of plain ES2019 scripts (no framework, no bundler) inlined into the page. Generated output never contains code: only the spec, the layout, and `proposal.json` as JSON blocks ([ADR 0001](adr/0001-data-only-output.md)).
+The runtime is a small set of plain ES2019 scripts (no framework, no bundler) inlined into the page. `build` inlines only the modules the spec needs: a core-only diagram ships without the player, layers, or story code. Generated output never contains code: only the spec, the layout, and `proposal.json` as JSON blocks ([ADR 0001](adr/0001-data-only-output.md)).
 
 ```html
 <script type="application/json" id="fs-spec">{ … }</script>
 <script type="application/json" id="fs-layout">{ … }</script>
 <script type="application/json" id="fs-proposal">{ … }</script>
-<script>/* flowstory runtime 0.1.0 — md.js, flow.js, sheet.js, story.js */</script>
+<script>/* flowstory runtime 0.1.0 — md.js, core.js, layers.js, player.js, types/*.js, sheet.js, story.js */</script>
 ```
 
 `build` escapes `</` inside the JSON so data can't close the script tag. The page carries a `<meta name="generator" content="flowstory 0.1.0">` tag so `check` and future versions can tell which runtime built it.
@@ -88,15 +94,17 @@ The runtime is a small set of plain ES2019 scripts (no framework, no bundler) in
 | Module | Responsibility |
 | --- | --- |
 | `md.js` | Inline markup → DOM nodes (text nodes and a few allowed elements). Never uses `innerHTML` on spec text. |
-| `flow.js` · resolve | Pure functions: `visible(mode)`, `resolveSteps(scenario, mode)` (base → base chain → `byMode`), `calloutsFor(step, mode)`. Unit-tested in Node. |
-| `flow.js` · render | Draws lanes, nodes, edges, and labels as SVG from `layout.json`. Applies mode classes (`is-new`, `is-ghost`, `is-alt`). |
-| `flow.js` · player | Step timer, packet animation along edge paths, camera tween, scrubber, URL hash, keyboard, spotlight. Owns the motion policy. |
+| `core.js` | State, SVG render of lanes, groups, nodes, edges, and labels from `layout.json`; pan/zoom; spotlight; legend. Works with no layers at all. |
+| `layers.js` · resolve | Pure functions: `visible(view)`, `resolveSteps(scenario, view)` (base → base chain → `byView`), `calloutsFor(step, view)`. Unit-tested in Node. |
+| `layers.js` · render | View classes (`is-new`, `is-ghost`, `is-alt`), diff overlay, callout cards, verdict frame. Each layer mounts only if its data exists and its flag is on. |
+| `player.js` | Step timer, packet animation along edge paths, camera tween, scrubber, URL hash, keyboard. Owns the motion policy. Not loaded into the page when there are no scenarios. |
+| `types/*.js` | Per-type render hints: lifelines for sequence, state shapes later. A type module never re-implements layers. |
 | `sheet.js` | Side sheet with the fixed sections; focus trap; `Esc` to close; back-history between entries. |
-| `story.js` | Story panel and inline chapters; proposal view with problem/option tables; benchmark slots. |
+| `story.js` | Story panel and inline chapters; proposal panel with problem/option tables; benchmark slots. |
 
 ### State
 
-One state object: `{ mode, scenario, stepIndex, playing, speed, follow, view, focusNode }`. Every change goes through `set(patch)`, which re-renders only what changed and writes `mode`, `scenario`, and `step` to the URL hash. Per-viewer preferences (`follow`, `speed`, story panel open) go to `localStorage`, wrapped in try/catch so the page works when storage is blocked.
+One state object: `{ view, scenario, stepIndex, playing, speed, follow, view, focusNode }`. Every change goes through `set(patch)`, which re-renders only what changed and writes `view`, `scenario`, and `step` to the URL hash. Per-viewer preferences (`follow`, `speed`, story panel open) go to `localStorage`, wrapped in try/catch so the page works when storage is blocked.
 
 ### Accessibility
 
@@ -108,7 +116,11 @@ One state object: `{ mode, scenario, stepIndex, playing, speed, follow, view, fo
 
 ## layout.mjs
 
-Input: lanes, nodes (all modes combined), edges, and type. Output: node boxes, edge polylines, label anchors, canvas size.
+Input: lanes, groups, nodes (all views combined), edges, and type. Output: node boxes, group boxes, edge polylines, label anchors, canvas size.
+
+`layout.mjs` is a dispatcher. Each diagram type has a module in `scripts/lib/types/` that turns the spec into boxes and routes. Routing, label placement, and the geometry checks are shared. Adding a type means adding a layout module, a runtime type module, adversarial fixtures, and a section in `references/diagram-types.md`. Nothing else changes.
+
+v1 ships flow and sequence. State machine, pipeline/DAG, and deployment follow ([06 · Roadmap](06-roadmap.md)).
 
 **Flow layout**
 
@@ -120,9 +132,9 @@ Input: lanes, nodes (all modes combined), edges, and type. Output: node boxes, e
 
 **Sequence layout**
 
-Lanes become participants spaced evenly. For each (mode, scenario) the step packets become messages, one row each, in step order. Lifelines are drawn for the full height; participants hidden in a mode are drawn as ghost lifelines or removed, depending on the rule.
+Lanes become participants spaced evenly. Edges are the messages, one row each, in declaration order (or by an explicit `order`), so a sequence diagram works with no playback. With playback, a step highlights the messages its packets travel on, and the whole sequence stays visible. Lifelines are drawn for the full height; participants hidden in a view are drawn as ghost lifelines or removed, depending on the rule.
 
-Because layout runs over the union of all modes, **nothing moves when the mode changes**. That's the core promise, and it's tested.
+Because layout runs over the union of all views, **nothing moves when the view changes**. That's the core promise, and it's tested.
 
 ### Geometry checks
 
@@ -132,16 +144,16 @@ Because layout runs over the union of all modes, **nothing moves when the mode c
 | --- | --- |
 | `node-overlap` | No two node boxes overlap (with a minimum gap) |
 | `edge-through-node` | No edge segment crosses a node box other than its own endpoints |
-| `label-overlap` | No label overlaps a node or another label visible in the same mode |
+| `label-overlap` | No label overlaps a node or another label visible in the same view |
 | `label-off-canvas` | Every label is inside the canvas |
 | `edge-detached` | Every edge starts and ends on its nodes' borders |
-| `mode-stable` | Each node's box is identical in every mode where it's visible |
+| `view-stable` | Each node's box is identical in every view where it's visible |
 
-Overlap checks run **per mode**, against only what that mode shows. Two labels may share space if they never appear together.
+Overlap checks run **per view**, against only what that view shows. Two labels may share space if they never appear together.
 
 ### Adversarial tests
 
-`scripts/test/` holds fixture specs that are designed to break layout: ten edges into one node, long labels, a node in every lane on one row, parallel edges, edges between neighbours with no gap, a mode that adds a node in the middle of a busy row. Each fixture must either lay out cleanly or fail with a specific check code. A layout change that turns a passing fixture into a failing one fails CI.
+`scripts/test/` holds fixture specs that are designed to break layout: ten edges into one node, long labels, a node in every lane on one row, parallel edges, edges between neighbours with no gap, a view that adds a node in the middle of a busy row. Each fixture must either lay out cleanly or fail with a specific check code. A layout change that turns a passing fixture into a failing one fails CI.
 
 ## check.mjs
 
@@ -169,7 +181,7 @@ Live preview while the agent or a person edits the spec.
 
 - Watches `spec.json`, `proposal.json`, and `results.json`; on change runs validate → layout → build.
 - Serves the **last good build** at `http://localhost:<port>/`. A failing build shows an error banner over the last good page instead of a broken page.
-- Reloads the browser on a successful build, keeping mode, scenario, and step via the URL hash.
+- Reloads the browser on a successful build, keeping view, scenario, and step via the URL hash.
 - Binds to `127.0.0.1` only.
 
 ## Size budget

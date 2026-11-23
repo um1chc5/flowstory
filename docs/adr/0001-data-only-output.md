@@ -32,4 +32,4 @@ The reference page this project generalizes was hand-written, with content and c
 
 - **Agent writes the whole HTML page.** Most flexible, and the worst on every point above.
 - **Agent writes JS against a runtime API.** Still generated code in the page; still injectable.
-- **Mermaid or another text DSL.** Good for structure, but has no way to express modes, steps, verdicts, or evidence. May come back later as an *import* format.
+- **Mermaid or another text DSL.** Good for structure, but has no way to express views, steps, verdicts, or evidence. May come back later as an *import* format.

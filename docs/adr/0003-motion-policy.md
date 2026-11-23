@@ -10,7 +10,7 @@ Motion is what makes a scenario easy to follow: a packet moving from `api` to `p
 ## Decision
 
 1. **Reader in control.** Play, pause, step, scrub, and speed are always available (except with `controls: none`, where the keyboard still works).
-2. **Autoplay at most once.** Only with `playback: auto`, only once per page load, and only if the reader hasn't interacted yet. Changing mode or scenario doesn't autoplay.
+2. **Autoplay at most once.** Only with `playback: auto`, only once per page load, and only if the reader hasn't interacted yet. Changing view or scenario doesn't autoplay.
 3. **Never loop.** A scenario stops on its verdict. Nothing animates while idle: no pulsing, no ambient motion.
 4. **Respect `prefers-reduced-motion`.** Steps change instantly, packets appear at the middle of their edge with no travel, and the camera jumps instead of tweening. Autoplay is off.
 5. **Pause when hidden.** Playback pauses when the tab is hidden and doesn't resume by itself.

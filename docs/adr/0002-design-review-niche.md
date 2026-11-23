@@ -1,6 +1,6 @@
 # ADR 0002 · Focus on behavioural design review, not diagram breadth
 
-- **Status:** accepted
+- **Status:** superseded by [ADR 0005](0005-general-system-diagram-tool.md)
 - **Date:** 2026-11-23
 
 ## Context
@@ -24,7 +24,7 @@ flowstory's niche is the **behavioural before/after**: the same scenario played 
 
 - Clear answer to "why not archify?": use archify to see what a system looks like; use flowstory to decide what to change.
 - We say no to ERDs, class diagrams, charts, and mind maps, even when asked.
-- Verdicts are a responsibility. The honesty rules ([05 · Proposal mode](../05-proposal.md#honesty-rules)) exist because of this decision.
+- Verdicts are a responsibility. The honesty rules ([05 · Review and proposal](../05-proposal.md#honesty-rules)) exist because of this decision.
 
 ## Alternatives considered
 

@@ -4,31 +4,64 @@ The agent writes one JSON file, `spec.json`. It holds data only: no code, no HTM
 
 ## Top level
 
+Only the **core** fields are required. Each optional layer ([02 · Features](02-features.md)) is switched on by adding its fields.
+
 ```jsonc
 {
+  // ── core (required) ───────────────────────────────
   "flowstory": 1,                    // spec format version
   "id": "checkout",                  // slug: output folder and file name
   "title": "Order checkout",
-  "type": "flow",                    // "flow" | "sequence"
-  "preset": "full",                  // minimal | walkthrough | review | full | embed
-  "features": { "camera": "static" },// overrides on top of the preset (see 02 · Features)
-
+  "type": "flow",                    // v1: "flow" | "sequence"   later: "state" | "pipeline" | "deployment"
   "source": "code",                  // "code" (traced from a repo) | "design" (greenfield, no repo)
-  "evidence": { "repo": "https://example.com/acme/shop", "commit": "4f1c2ab" }, // + "dirty": true if uncommitted changes were read
-
-  "lanes":  [ ... ],                 // columns (flow) or participants (sequence)
-  "kinds":  { ... },                 // optional: custom node kinds on top of the built-in ones
+  "lanes":  [ ... ],                 // meaning depends on type (columns, participants, …)
   "nodes":  [ ... ],
   "edges":  [ ... ],
-  "modes":  [ ... ],
-  "problems": [ ... ],
-  "fixes":    [ ... ],
-  "scenarios":[ ... ],
+
+  // ── core (optional) ───────────────────────────────
+  "preset": "diagram",               // diagram (default) | compare | walkthrough | review | full | embed
+  "features": { "camera": "static" },// overrides on top of the preset
+  "kinds":  { ... },                 // custom node kinds on top of the built-in ones
+  "groups": [ ... ],                 // labelled boxes around nodes
   "deep":   { ... },                 // deep-dive entries, by id
   "story":  [ ... ],                 // chapters
-  "sims":   [ ... ]                  // optional sim placements
+  "sims":   [ ... ],                 // sim placements
+
+  // ── layers (all optional) ─────────────────────────
+  "views":     [ ... ],              // Views
+  "scenarios": [ ... ],              // Playback (+ "verdict" per scenario → Review)
+  "notes":     [ ... ],              // Callouts: note | risk | question
+  "problems":  [ ... ],              // Callouts + Review
+  "fixes":     [ ... ],              // Callouts + Review
+  "evidence":  { "repo": "https://example.com/acme/shop", "commit": "4f1c2ab" } // Sync; + "dirty": true if uncommitted changes were read
 }
 ```
+
+### The smallest spec
+
+This is a complete, valid spec. It renders a static checkout diagram with no views, no playback, and no callouts.
+
+```json
+{
+  "flowstory": 1, "id": "checkout", "title": "Order checkout", "type": "flow", "source": "design",
+  "lanes": [{ "id": "edge" }, { "id": "app" }, { "id": "async" }, { "id": "data" }],
+  "nodes": [
+    { "id": "client", "kind": "client",  "lane": "edge",  "row": 0, "label": "Web client" },
+    { "id": "api",    "kind": "service", "lane": "app",   "row": 0, "label": "Orders API" },
+    { "id": "queue",  "kind": "queue",   "lane": "async", "row": 0, "label": "order-events" },
+    { "id": "worker", "kind": "worker",  "lane": "async", "row": 1, "label": "Fulfilment worker" },
+    { "id": "db",     "kind": "store",   "lane": "data",  "row": 0, "label": "orders DB" }
+  ],
+  "edges": [
+    { "id": "client>api", "from": "client", "to": "api", "label": "POST /orders" },
+    { "id": "api>db", "from": "api", "to": "db", "label": "insert" },
+    { "id": "api>queue", "from": "api", "to": "queue", "label": "OrderCreated" },
+    { "id": "queue>worker", "from": "queue", "to": "worker" }
+  ]
+}
+```
+
+The rest of this doc builds the full checkout example, layer by layer.
 
 ## Evidence
 
@@ -78,8 +111,20 @@ Rules:
 
 - `lane` + `row` place the node. Rows are integers per lane; `row: 1.5` is allowed for an in-between slot. `span: 2` widens a node across two rows.
 - Built-in kinds: `client`, `service`, `external`, `queue`, `worker`, `store`, `cache`, `function`, `user`. Each has an icon and a colour token. `kinds` can add more (`{ "search": { "label": "Search index", "icon": "search", "like": "store" } }`).
-- Per-mode rules: `only`, `hideIn`, `newIn`, `ghostIn`, `altIn` (see [02 · Features](02-features.md#the-canvas)). A node may not be both `only`-excluded and `newIn` in the same mode; `validate` reports that.
+- Per-view rules: `only`, `hideIn`, `newIn`, `ghostIn`, `altIn` (see [02 · Features](02-features.md#layer--views)). They only matter when `views` is set. A node may not be both `only`-excluded and `newIn` in the same view; `validate` reports that.
 - Optional `x`, `y` override the computed centre. Use them sparingly.
+- What `lane` and `row` mean depends on `type`: lanes are participants in a sequence diagram, and groups take over in a deployment diagram. See `references/diagram-types.md`.
+
+## Groups
+
+```jsonc
+"groups": [
+  { "id": "backend", "label": "Checkout service", "nodes": ["api", "idem", "outbox", "relay"] },
+  { "id": "vendor",  "label": "Third party",      "nodes": ["payments"], "style": "external" }
+]
+```
+
+A group draws a labelled box around its nodes. Groups can nest (`"groups": ["…"]` inside a group) and take the same per-view rules as nodes. Layout keeps a group's nodes together; a node belongs to at most one group at each level.
 
 ## Edges
 
@@ -99,25 +144,39 @@ Rules:
 ```
 
 - `id` must be `from>to`, optionally with a suffix (`api>db#2`) for parallel edges.
-- Edges take the same per-mode rules as nodes. An edge is hidden automatically in any mode where one of its ends is hidden.
+- Edges take the same per-view rules as nodes. An edge is hidden automatically in any view where one of its ends is hidden.
 - `pts: [[x, y], …]` and `labelAt: [x, y]` override routing for one edge.
 - `evidence: "required"` on an edge (or `features.edgeEvidence: "required"`) makes `check` fail if no citation is given.
 
-## Modes
+## Views *(layer)*
+
+Leave `views` out and the diagram has one implicit view, `default`. Add it to get a view switcher and diffs.
 
 ```jsonc
-"modes": [
+"views": [
   { "id": "today",    "label": "Today",    "role": "baseline" },
   { "id": "problems", "label": "Problems", "role": "critique", "base": "today" },
   { "id": "proposal", "label": "Outbox + idempotency keys", "role": "option" }
 ]
 ```
 
-- `role` decides how callouts render (see [02 · Features](02-features.md#callouts-are-shared-ids-not-inline-text)).
-- `base` makes one mode inherit another's element rules and step overrides. `problems` is usually Today's structure plus callouts, so it sets `base: "today"` and needs no rules of its own.
+- `role` is optional and only used by the Review layer: it decides how problem and fix callouts render (see [02 · Features](02-features.md#problem-and-fix-callouts-follow-the-views-role)). Without Review, views need only `id` and `label`.
+- `base` makes one view inherit another's element rules and step overrides. `problems` is usually Today's structure plus callouts, so it sets `base: "today"` and needs no rules of its own.
 - In a greenfield spec the baseline can be a naive design (`{ "id": "v0", "label": "Simplest thing", "role": "baseline" }`) or be left out entirely.
 
-## Problems and fixes
+## Notes *(Callouts layer)*
+
+```jsonc
+"notes": [
+  { "id": "N1", "kind": "note",     "node": "queue", "title": "At-least-once", "text": "Consumers must be idempotent." },
+  { "id": "N2", "kind": "question", "node": "relay", "title": "Poll or tail?", "text": "Polling is simpler; log tailing has less lag.", "in": ["proposal"] }
+]
+```
+
+- `kind`: `note` · `risk` · `question`. Ids are `N<n>`.
+- `in` lists the views where the note shows statically. Without `in` it shows in every view. With playback, a step can also list it in `callouts`, and then it shows only on that step.
+
+## Problems and fixes *(Callouts + Review layers)*
 
 ```jsonc
 "problems": [
@@ -140,12 +199,12 @@ Rules:
 ```
 
 - Problem `type`: `performance` · `correctness` · `security` · `ops`.
-- Ids are `P<n>` and `F<n>`. They are shared with `proposal.json` and `PROPOSAL.md` ([05 · Proposal mode](05-proposal.md)).
-- `P3` has no fix in `proposal`, so wherever a step cites `P3` in that mode, the page shows an **unsolved** card. That's intended.
+- Ids are `P<n>` and `F<n>`. They are shared with `proposal.json` and `PROPOSAL.md` ([05 · Review and proposal](05-proposal.md)).
+- `P3` has no fix in `proposal`, so wherever a step cites `P3` in that view, the page shows an **unsolved** card. That's intended.
 
-## Scenarios and steps
+## Scenarios and steps *(Playback layer)*
 
-A scenario has one base list of steps. `byMode` patches a step for one mode. Steps that only exist in some modes use `in` / `skipIn`.
+A scenario has one base list of steps. `byView` patches a step for one view. Steps that only exist in some views use `in` / `skipIn`.
 
 ```jsonc
 "scenarios": [
@@ -168,7 +227,7 @@ A scenario has one base list of steps. `byMode` patches a step for one mode. Ste
         "status": { "payments": "bad" },
         "callouts": ["P1"],
         "caption": "Both requests reach the provider. Nothing ties them together.",
-        "byMode": {
+        "byView": {
           "proposal": {
             "active": ["api", "idem", "payments"],
             "packets": [{ "edge": "api>idem", "label": "key k-42: new" }, { "edge": "api>payments", "label": "charge $80" },
@@ -200,30 +259,30 @@ A scenario has one base list of steps. `byMode` patches a step for one mode. Ste
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `id` | string | Unique within the scenario. Used by `byMode`, story chapters, and the URL hash. |
+| `id` | string | Unique within the scenario. Used by `byView`, story chapters, and the URL hash. |
 | `active` | node ids | Highlighted nodes. |
-| `packets` | `{ edge, label, tone?, reverse?, delay? }[]` | `edge` must be a declared edge **visible in the current mode**. `reverse: true` for responses. `tone`: `ok` · `bad` · `new`. `delay` in fractions of a step. |
+| `packets` | `{ edge, label, tone?, reverse?, delay? }[]` | `edge` must be a declared edge **visible in the current view**. `reverse: true` for responses. `tone`: `ok` · `bad` · `new`. `delay` in fractions of a step. |
 | `badges` | `{ node: text }` | Short. 24 characters at most (`validate` warns above that). |
 | `status` | `{ node: ok \| warn \| bad \| new }` | |
-| `callouts` | problem ids | Rendered according to the mode's role. |
+| `callouts` | note or problem ids | Notes show as written; problems render according to the view's role (Review). |
 | `camera` | node ids · `"all"` · `"keep"` | Defaults to `active`. |
 | `caption` | inline text | See *Inline text* below. |
 | `deep` | deep-dive id | |
-| `in` / `skipIn` | mode ids | The step exists only in / is skipped in these modes. |
-| `byMode` | `{ modeId: partialStep }` | Patch for one mode. |
+| `in` / `skipIn` | view ids | The step exists only in / is skipped in these views. |
+| `byView` | `{ viewId: partialStep }` | Patch for one view. |
 
-### How `byMode` merges
+### How `byView` merges
 
-For mode `m`, a step resolves in this order: the base step → the patches of `m`'s `base` chain → `byMode[m]`.
+For view `m`, a step resolves in this order: the base step → the patches of `m`'s `base` chain → `byView[m]`.
 
 - Objects (`badges`, `status`) merge key by key. A value of `null` removes the key.
 - Arrays (`active`, `packets`, `callouts`, `camera`) are **replaced**, not concatenated. That keeps a patch readable on its own.
 - Scalars replace.
-- A key in `byMode` may list several modes: `"a,proposal": { … }`.
+- A key in `byView` may list several views: `"a,proposal": { … }`.
 
-### Verdict
+### Verdict *(Review layer)*
 
-`verdict` maps mode id → `{ outcome, label, why, evidence? }`. Every mode shown for the scenario needs a verdict; `validate` reports missing ones. `outcome` is `ok` · `warn` · `bad`. The player adds the verdict as the final frame automatically; authors don't write a verdict step.
+`verdict` is optional; adding it turns on the Review layer for the page. It maps view id → `{ outcome, label, why, evidence? }`. Once any scenario has a verdict, every view shown for every scenario needs one; `validate` reports missing ones. `outcome` is `ok` · `warn` · `bad`. The player adds the verdict as the final frame automatically; authors don't write a verdict step.
 
 ## Deep dives
 
@@ -258,13 +317,13 @@ Node entries use the five fixed sections (`role`, `how`, `code`, `weak`, `read`)
 
 ```jsonc
 "story": [
-  { "id": "c1", "title": "How checkout works", "mode": "today", "scenario": "normal-order",
+  { "id": "c1", "title": "How checkout works", "view": "today", "scenario": "normal-order",
     "body": "One request does four things in a row: charge, insert, publish, respond." },
-  { "id": "c2", "title": "Where it breaks", "mode": "problems", "scenario": "double-submit", "step": "s2",
+  { "id": "c2", "title": "Where it breaks", "view": "problems", "scenario": "double-submit", "step": "s2",
     "body": "Retries and crashes both lead to wrong money or lost events. See P1 and P2." },
-  { "id": "c3", "title": "The fix", "mode": "proposal", "scenario": "double-submit",
+  { "id": "c3", "title": "The fix", "view": "proposal", "scenario": "double-submit",
     "body": "Idempotency keys stop double charges. The outbox makes the event part of the transaction." },
-  { "id": "c4", "title": "What we need to decide", "mode": "proposal",
+  { "id": "c4", "title": "What we need to decide", "view": "proposal",
     "body": "Key retention period, and whether the relay polls or tails the log." }
 ]
 ```
@@ -288,9 +347,9 @@ Anything else (tags, scripts, `javascript:` URLs) is shown as literal text, and 
 {
   "ok": false,
   "errors": [
-    { "code": "packet-edge-hidden", "path": "/scenarios/0/steps/1/byMode/proposal/packets/0",
-      "message": "Packet uses edge 'api>queue', which is hidden in mode 'proposal'.",
-      "fix": "Use 'api>outbox', or add 'proposal' to the edge's visible modes." }
+    { "code": "packet-edge-hidden", "path": "/scenarios/0/steps/1/byView/proposal/packets/0",
+      "message": "Packet uses edge 'api>queue', which is hidden in view 'proposal'.",
+      "fix": "Use 'api>outbox', or add 'proposal' to the edge's visible views." }
   ],
   "warnings": [
     { "code": "badge-long", "path": "/scenarios/2/steps/0/badges/queue", "message": "Badge is 31 characters (max 24)." }
@@ -302,14 +361,15 @@ Every error has a stable `code`, a JSON Pointer `path`, and, where possible, a c
 
 | Code | Rule |
 | --- | --- |
-| `ref-unknown` | Every id reference (node, edge, mode, problem, fix, deep, step) resolves |
+| `ref-unknown` | Every id reference (node, edge, view, problem, fix, deep, step) resolves |
 | `edge-id` | Edge id matches `from>to[#n]` |
-| `packet-edge-hidden` | Every packet travels on a declared edge that is visible in that mode |
-| `active-hidden` | Active nodes, badges, and status refer to nodes visible in that mode |
-| `verdict-missing` | Every (scenario, shown mode) has a verdict |
-| `fix-orphan` | Every fix solves at least one problem and appears in at least one mode |
-| `problem-unused` | Every problem is cited by at least one step (warning) |
+| `packet-edge-hidden` | Every packet travels on a declared edge that is visible in that view |
+| `active-hidden` | Active nodes, badges, and status refer to nodes visible in that view |
+| `verdict-missing` | With Review on, every (scenario, shown view) has a verdict |
+| `fix-orphan` | Every fix solves at least one problem and appears in at least one view |
+| `problem-unused` | With Playback on, every problem is cited by at least one step (warning) |
+| `layer-missing` | Fields of a layer refer to another layer that isn't there (e.g. `byView` with no `views`, step `callouts` with no notes or problems) |
 | `evidence-kind` | `code` evidence only when `source` is `"code"` |
-| `rules-conflict` | No element is both excluded and `newIn` in the same mode |
+| `rules-conflict` | No element is both excluded and `newIn` in the same view |
 | `deep-section` | Deep entries only use their allowed sections |
 | `markup-unsafe` | Inline text contains HTML or unsafe links (warning) |

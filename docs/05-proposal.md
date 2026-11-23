@@ -1,8 +1,8 @@
-# 05 · Proposal mode
+# 05 · Review and proposal
 
-Proposal mode adds the argument around the diagram. The agent writes `proposal.json` next to `spec.json`. The build turns it into:
+This is the **Review layer** ([02 · Features](02-features.md#layer--review)), the most opinionated part of flowstory and fully optional. Problems, fixes, and verdicts live in `spec.json`. The proposal adds the argument around the diagram: the agent writes `proposal.json` next to `spec.json`. The build turns it into:
 
-- a **Proposal view** in the page (a tab next to the canvas, and the last story chapter links to it), and
+- a **Proposal panel** in the page (a tab next to the canvas, and the last story chapter links to it), and
 - **`PROPOSAL.md`**, a plain Markdown document for a PR, wiki, or RFC repo.
 
 Both come from the same data, and both use the ids from `spec.json`. Neither is edited by hand: to change the doc, change the JSON and rebuild.
@@ -14,9 +14,9 @@ Both come from the same data, and both use the ids from `spec.json`. Neither is 
 | # | Section | Comes from |
 | --- | --- | --- |
 | 1 | **Context** | `proposal.context`: why this is being looked at now |
-| 2 | **Today** | `spec.modes[role=baseline]` + a short summary; link to the page |
+| 2 | **Today** | `spec.views[role=baseline]` + a short summary; link to the page |
 | 3 | **Problems** | `spec.problems`, each with type, summary, and evidence |
-| 4 | **Options** | `spec.modes[role=option]` + `proposal.options` |
+| 4 | **Options** | `spec.views[role=option]` + `proposal.options` |
 | 5 | **Trade-offs** | A generated table: problems × options (fixed / unsolved / partly), plus `proposal.options[].cost` |
 | 6 | **Recommendation** | `proposal.recommendation` |
 | 7 | **Rollout** | `proposal.rollout`: ordered phases |
@@ -39,10 +39,10 @@ For a greenfield spec, **Today** is replaced by the baseline design if there is 
   "context": "Support sees double charges every flash sale, and fulfilment sometimes never hears about paid orders.",
 
   "options": [
-    { "mode": "proposal", "id": "O1", "title": "Outbox + idempotency keys",
+    { "view": "proposal", "id": "O1", "title": "Outbox + idempotency keys",
       "summary": "Make checkout safe to retry and make the event part of the transaction.",
       "cost": [{ "text": "2 new tables, 1 new worker" }, { "text": "~3 engineer-weeks", "measured": false }] },
-    { "mode": null, "id": "O0", "title": "Do nothing",
+    { "view": null, "id": "O0", "title": "Do nothing",
       "summary": "Keep refunding manually.", "cost": [{ "text": "Support load during sales" }] }
   ],
 
@@ -54,7 +54,7 @@ For a greenfield spec, **Today** is replaced by the baseline design if there is 
 
   "rollout": [
     { "id": "R-1", "title": "Idempotency keys behind a flag", "detail": "Client sends keys; API stores and checks them." },
-    { "id": "R-2", "title": "Outbox write in shadow mode", "detail": "Write events to both outbox and queue; compare." },
+    { "id": "R-2", "title": "Outbox write in shadow view", "detail": "Write events to both outbox and queue; compare." },
     { "id": "R-3", "title": "Switch publishing to the relay" }
   ],
 
@@ -87,7 +87,7 @@ For a greenfield spec, **Today** is replaced by the baseline design if there is 
 | --- | --- | --- |
 | `P` | Problem | `spec.json` |
 | `F` | Fix | `spec.json` |
-| `O` | Option (maps to a mode; `O0` = do nothing) | `proposal.json` |
+| `O` | Option (maps to a view; `O0` = do nothing) | `proposal.json` |
 | `R-` | Rollout phase | `proposal.json` |
 | `K` | Risk | `proposal.json` |
 | `Q` | Open question | `proposal.json` |
@@ -123,11 +123,11 @@ Written by whoever runs the benchmark (a person, a CI job, or the agent running 
 
 When `results.json` appears, the slot renders as a simple bar comparison with the method and commit underneath, and the numbers count as `measurement` evidence (`results.json#B1`) everywhere they're cited.
 
-## Proposal view in the page
+## Proposal panel in the page
 
-The page's Proposal view is a scrollable column with the same sections. A few things are interactive:
+The page's Proposal panel is a scrollable column with the same sections. A few things are interactive:
 
-- Problem rows open the problem sheet, and a **Show me** button jumps the canvas to the first step that cites that problem in the critique mode.
-- Columns of the trade-offs table switch the canvas to that option's mode.
+- Problem rows open the problem sheet, and a **Show me** button jumps the canvas to the first step that cites that problem in the critique view.
+- Columns of the trade-offs table switch the canvas to that option's view.
 - Benchmark slots show the bar comparison or "waiting for data".
 - A status pill in the header shows `draft` / `in-review` / `accepted` / `rejected`.
