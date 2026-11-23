@@ -1,0 +1,31 @@
+{
+  "expect": "clean",
+  "spec": {
+    "flowstory": 1,
+    "id": "every-lane-one-row",
+    "title": "Node in every lane on row 0",
+    "type": "flow",
+    "source": "design",
+    "lanes": [
+      { "id": "l1", "label": "L1" },
+      { "id": "l2", "label": "L2" },
+      { "id": "l3", "label": "L3" },
+      { "id": "l4", "label": "L4" },
+      { "id": "l5", "label": "L5" }
+    ],
+    "nodes": [
+      { "id": "n1", "kind": "client", "lane": "l1", "row": 0, "label": "N1" },
+      { "id": "n2", "kind": "service", "lane": "l2", "row": 0, "label": "N2" },
+      { "id": "n3", "kind": "queue", "lane": "l3", "row": 0, "label": "N3" },
+      { "id": "n4", "kind": "worker", "lane": "l4", "row": 0, "label": "N4" },
+      { "id": "n5", "kind": "store", "lane": "l5", "row": 0, "label": "N5" }
+    ],
+    "edges": [
+      { "id": "n1>n2", "from": "n1", "to": "n2", "label": "step 1" },
+      { "id": "n2>n3", "from": "n2", "to": "n3", "label": "step 2" },
+      { "id": "n3>n4", "from": "n3", "to": "n4", "label": "step 3" },
+      { "id": "n4>n5", "from": "n4", "to": "n5", "label": "step 4" },
+      { "id": "n1>n4", "from": "n1", "to": "n4", "label": "bypass" }
+    ]
+  }
+}

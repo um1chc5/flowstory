@@ -1,0 +1,42 @@
+{
+  "expect": "clean",
+  "spec": {
+    "flowstory": 1,
+    "id": "ten-edges",
+    "title": "Ten edges into one hub",
+    "type": "flow",
+    "source": "design",
+    "lanes": [
+      { "id": "sources", "label": "Sources" },
+      { "id": "hub", "label": "Hub" },
+      { "id": "sinks", "label": "Sinks" }
+    ],
+    "nodes": [
+      { "id": "s1", "kind": "service", "lane": "sources", "row": 0, "label": "Source 1" },
+      { "id": "s2", "kind": "service", "lane": "sources", "row": 1, "label": "Source 2" },
+      { "id": "s3", "kind": "service", "lane": "sources", "row": 2, "label": "Source 3" },
+      { "id": "s4", "kind": "service", "lane": "sources", "row": 3, "label": "Source 4" },
+      { "id": "s5", "kind": "service", "lane": "sources", "row": 4, "label": "Source 5" },
+      { "id": "s6", "kind": "service", "lane": "sources", "row": 5, "label": "Source 6" },
+      { "id": "s7", "kind": "service", "lane": "sources", "row": 6, "label": "Source 7" },
+      { "id": "s8", "kind": "service", "lane": "sources", "row": 7, "label": "Source 8" },
+      { "id": "s9", "kind": "service", "lane": "sources", "row": 8, "label": "Source 9" },
+      { "id": "s10", "kind": "service", "lane": "sources", "row": 9, "label": "Source 10" },
+      { "id": "core", "kind": "queue", "lane": "hub", "row": 4, "span": 2, "label": "Central Bus" },
+      { "id": "sink", "kind": "store", "lane": "sinks", "row": 4, "label": "Archive DB" }
+    ],
+    "edges": [
+      { "id": "s1>core", "from": "s1", "to": "core", "label": "e1" },
+      { "id": "s2>core", "from": "s2", "to": "core", "label": "e2" },
+      { "id": "s3>core", "from": "s3", "to": "core", "label": "e3" },
+      { "id": "s4>core", "from": "s4", "to": "core", "label": "e4" },
+      { "id": "s5>core", "from": "s5", "to": "core", "label": "e5" },
+      { "id": "s6>core", "from": "s6", "to": "core", "label": "e6" },
+      { "id": "s7>core", "from": "s7", "to": "core", "label": "e7" },
+      { "id": "s8>core", "from": "s8", "to": "core", "label": "e8" },
+      { "id": "s9>core", "from": "s9", "to": "core", "label": "e9" },
+      { "id": "s10>core", "from": "s10", "to": "core", "label": "e10" },
+      { "id": "core>sink", "from": "core", "to": "sink", "label": "flush" }
+    ]
+  }
+}

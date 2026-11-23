@@ -1,0 +1,20 @@
+{
+  "expect": "node-overlap",
+  "spec": {
+    "flowstory": 1,
+    "id": "adjacent-no-gap",
+    "title": "Adjacent nodes with no gap",
+    "type": "flow",
+    "source": "design",
+    "lanes": [
+      { "id": "app", "label": "App" }
+    ],
+    "nodes": [
+      { "id": "a", "kind": "service", "lane": "app", "row": 0, "label": "Node A", "x": 160, "y": 100 },
+      { "id": "b", "kind": "service", "lane": "app", "row": 1, "label": "Node B", "x": 160, "y": 146 }
+    ],
+    "edges": [
+      { "id": "a>b", "from": "a", "to": "b" }
+    ]
+  }
+}

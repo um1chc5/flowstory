@@ -1,0 +1,21 @@
+{
+  "expect": "edge-detached",
+  "spec": {
+    "flowstory": 1,
+    "id": "edge-detached",
+    "title": "Manual pts detached from node border",
+    "type": "flow",
+    "source": "design",
+    "lanes": [
+      { "id": "l1", "label": "L1" },
+      { "id": "l2", "label": "L2" }
+    ],
+    "nodes": [
+      { "id": "a", "kind": "client", "lane": "l1", "row": 0, "label": "A", "x": 120, "y": 100 },
+      { "id": "b", "kind": "store", "lane": "l2", "row": 0, "label": "B", "x": 360, "y": 100 }
+    ],
+    "edges": [
+      { "id": "a>b", "from": "a", "to": "b", "pts": [[10, 10], [20, 20]] }
+    ]
+  }
+}

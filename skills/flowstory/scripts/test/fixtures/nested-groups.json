@@ -1,0 +1,30 @@
+{
+  "expect": "clean",
+  "spec": {
+    "flowstory": 1,
+    "id": "nested-groups",
+    "title": "Nested groups",
+    "type": "flow",
+    "source": "design",
+    "lanes": [
+      { "id": "edge", "label": "Edge" },
+      { "id": "app", "label": "App" },
+      { "id": "data", "label": "Data" }
+    ],
+    "nodes": [
+      { "id": "client", "kind": "client", "lane": "edge", "row": 0, "label": "Client" },
+      { "id": "api", "kind": "service", "lane": "app", "row": 0, "label": "API" },
+      { "id": "worker", "kind": "worker", "lane": "app", "row": 1, "label": "Worker" },
+      { "id": "db", "kind": "store", "lane": "data", "row": 0, "label": "DB" }
+    ],
+    "groups": [
+      { "id": "compute", "label": "Compute", "nodes": ["api", "worker"] },
+      { "id": "vpc", "label": "Prod VPC", "groups": ["compute"], "nodes": ["db"] }
+    ],
+    "edges": [
+      { "id": "client>api", "from": "client", "to": "api", "label": "HTTPS" },
+      { "id": "api>db", "from": "api", "to": "db", "label": "SQL" },
+      { "id": "api>worker", "from": "api", "to": "worker", "label": "dispatch" }
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "expect": "clean",
+  "spec": {
+    "flowstory": 1,
+    "id": "long-labels",
+    "title": "Very long labels",
+    "type": "flow",
+    "source": "design",
+    "lanes": [
+      { "id": "a", "label": "Ingress Gateway & Edge Layer" },
+      { "id": "b", "label": "Core Orchestration Tier" },
+      { "id": "c", "label": "Persistent Storage Cluster" }
+    ],
+    "nodes": [
+      { "id": "n1", "kind": "client", "lane": "a", "row": 0, "label": "Enterprise Customer Web Application Portal", "sub": "SPA + Service Worker" },
+      { "id": "n2", "kind": "service", "lane": "b", "row": 0, "label": "Distributed Order Validation & Enrichment Service", "sub": "gRPC + HTTP/2" },
+      { "id": "n3", "kind": "store", "lane": "c", "row": 0, "label": "Multi-Region Replicated PostgreSQL Primary Cluster", "sub": "read/write + WAL" }
+    ],
+    "edges": [
+      { "id": "n1>n2", "from": "n1", "to": "n2", "label": "POST /v2/checkout/validate-and-submit-order" },
+      { "id": "n2>n3", "from": "n2", "to": "n3", "label": "INSERT INTO orders_and_idempotency_ledger" }
+    ]
+  }
+}
